@@ -429,6 +429,165 @@ kbd {
   opacity: 0.7;
 }
 
+/* 左上の about と、その説明 */
+.about-open {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  left: 12px;
+  z-index: 2;
+  padding: 4px;
+  border: 0;
+  background: none;
+  font: 400 11px/1 var(--font-mono);
+  letter-spacing: 0.1em;
+  color: var(--mist);
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.about-open:hover {
+  color: var(--ink);
+}
+
+.about-open:focus-visible,
+.about-close:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.about {
+  width: min(620px, calc(100vw - 32px));
+  max-height: min(80vh, 760px);
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--night);
+  color: var(--ink-soft);
+  overflow: auto;
+}
+
+.about::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.about-body {
+  position: relative;
+  padding: 28px 28px 24px;
+  font: 300 13.5px/1.85 var(--font-ui);
+}
+
+.about h2 {
+  margin: 0 0 10px;
+  font: 400 22px/1.2 var(--font-ui);
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+.about h3 {
+  margin: 26px 0 8px;
+  font: 400 11px/1 var(--font-mono);
+  letter-spacing: 0.16em;
+  color: var(--mist);
+}
+
+.about p {
+  margin: 0 0 12px;
+}
+
+.about .about-lead {
+  color: var(--ink);
+}
+
+.about ul {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.about strong {
+  font-weight: 400;
+  color: var(--ink);
+}
+
+.about-worlds {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 18px;
+  margin: 0;
+}
+
+.about-worlds dt {
+  font: 400 12px/1.85 var(--font-mono);
+  color: var(--ink);
+}
+
+.about-worlds dd {
+  margin: 0;
+}
+
+.about .about-note {
+  margin-top: 18px;
+  font-size: 12px;
+  color: var(--mist);
+}
+
+.about-tools {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.about-lang {
+  padding: 6px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: none;
+  font: 400 10.5px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  color: var(--mist);
+  cursor: pointer;
+}
+
+.about-lang:hover {
+  color: var(--ink);
+}
+
+.about-lang:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.about-close {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: none;
+  font: 300 22px/1 var(--font-ui);
+  color: var(--mist);
+  cursor: pointer;
+}
+
+.about-close:hover {
+  color: var(--ink);
+}
+
+@media (max-width: 480px) {
+  .about-body {
+    padding: 24px 18px 20px;
+  }
+
+  .about-worlds {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .about-worlds dd {
+    margin-bottom: 8px;
+  }
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

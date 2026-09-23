@@ -343,8 +343,44 @@
     worldsBox.appendChild(b);
   }
 
+  // about: 説明を開く。閉じるボタン、Esc、外側のクリックで閉じる
+  const about = document.getElementById('about');
+  document.getElementById('about-open').addEventListener('click', () => about.showModal());
+  document.getElementById('about-close').addEventListener('click', () => about.close());
+  about.addEventListener('click', (e) => {
+    if (e.target === about) about.close();
+  });
+
+  // 説明の言語: 日本語 ⇄ 英語。選んだ方を覚えておく
+  const LANG_KEY = 'undertow.aboutLang';
+  const langButton = document.getElementById('about-lang');
+  function showLang(lang) {
+    for (const el of about.querySelectorAll('.about-text')) el.hidden = el.dataset.lang !== lang;
+    langButton.textContent = lang === 'en' ? '日本語' : 'eng';
+    langButton.lang = lang === 'en' ? 'ja' : 'en';
+    about.setAttribute('aria-label', lang === 'en' ? 'About Undertow' : 'Undertow について');
+  }
+  let aboutLang = 'ja';
+  try {
+    if (localStorage.getItem(LANG_KEY) === 'en') aboutLang = 'en';
+  } catch (e) {
+    /* 保存できない環境 */
+  }
+  showLang(aboutLang);
+  langButton.addEventListener('click', () => {
+    aboutLang = aboutLang === 'en' ? 'ja' : 'en';
+    showLang(aboutLang);
+    about.scrollTop = 0;
+    try {
+      localStorage.setItem(LANG_KEY, aboutLang);
+    } catch (e) {
+      /* 保存できない環境 */
+    }
+  });
+
   document.addEventListener('keydown', (e) => {
     if (e.code !== 'Space' || e.repeat || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (about.open) return; // 説明を読んでいる間は、Space でスクロールする
     const el = e.target;
     if (el instanceof HTMLButtonElement || el instanceof HTMLTextAreaElement || el.isContentEditable) return;
     if (el instanceof HTMLInputElement && el.type !== 'range') return;
