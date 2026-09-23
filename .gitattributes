@@ -1,0 +1,4 @@
+# 改行コードはリポジトリ内では LF にそろえる（Windows の CRLF で差分が乱れないように）
+* text=auto
+*.png binary
+*.zip binary

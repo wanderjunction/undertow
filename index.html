@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ja" data-state="idle">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Undertow</title>
+<meta name="description" content="静かな波のような、アンビエントでミニマルな四つ打ちテクノを生成し続けるプレイヤー">
+<meta name="theme-color" content="#05090e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2305090e'/%3E%3Cpath d='M5 18c3.5-5 7-5 11 0s7.5 5 11 0' fill='none' stroke='%23e6edf1' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400&amp;family=Jost:wght@300;400&amp;display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="sea" aria-hidden="true"></canvas>
+
+<main class="stage">
+  <h1 class="wordmark"><img src="assets/undertow-logo.png" alt="Undertow" width="1818" height="344"></h1>
+  <p class="tagline" lang="en">ambient minimal techno</p>
+
+  <div class="controls">
+    <button id="shuffle" class="change shuffle" type="button" aria-pressed="true" aria-label="auto（曲ごとに曲調を選び直す）" title="auto — 曲ごとに曲調を選び直す">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3.5c2 0 3 1 4.2 3l1.6 4c1.2 2 2.2 3 4.2 3H20"/><path d="M4 17h3.5c2 0 3-1 4-2.6M14.3 9.6c1-1.6 2-2.6 4-2.6H20"/><path d="M17.5 4.5 20 7l-2.5 2.5M17.5 14.5 20 17l-2.5 2.5"/></svg>
+    </button>
+    <button id="toggle" class="toggle" type="button" aria-label="再生" title="再生（Space）">
+      <svg class="icon icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>
+      <svg class="icon icon-stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
+    </button>
+    <button id="change" class="change" type="button" aria-label="チェンジ（新しい潮で始める）" title="チェンジ — 新しい潮へ">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5v11l8.5-5.5z"/><rect x="16" y="6.5" width="2" height="11" rx="1"/></svg>
+    </button>
+  </div>
+
+  <div class="volume">
+    <label for="volume" lang="en">vol</label>
+    <input id="volume" type="range" min="0" max="100" step="1" value="70" aria-label="音量">
+    <output id="volume-value" for="volume">70</output>
+    <span id="elapsed" class="elapsed" title="この曲の経過時間" aria-hidden="true">0:00</span>
+  </div>
+
+  <div id="worlds" class="worlds" role="group" aria-label="曲調"></div>
+</main>
+
+<footer class="tide-log">
+  <p id="readout" class="readout">再生するたびに、ちがう潮が満ちてきます。</p>
+  <p class="hint" lang="en"><kbd>space</kbd> play / stop</p>
+</footer>
+
+<p class="version" lang="en">v1.7</p>
+
+<p id="status" class="visually-hidden" role="status" aria-live="polite"></p>
+
+<script src="js/core/util.js"></script>
+<script src="js/core/rng.js"></script>
+<script src="js/core/content.js"></script>
+<script src="js/core/worlds.js"></script>
+<script src="js/core/director.js"></script>
+<script src="js/audio/patches.js"></script>
+<script src="js/audio/voices.js"></script>
+<script src="js/audio/transport.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

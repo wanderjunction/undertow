@@ -1,0 +1,106 @@
+/*
+ * Undertow — 値の置き場所
+ *
+ *   CONFIRMED    変えない約束。tests/ で守っている
+ *   CALIBRATION  試聴・計測で決めた仮値。普遍的な最適値ではない。変えたら version を上げる
+ *   CONTENT      パターンや和音の「素材集」。どれを使うかは WORLD（js/core/worlds.js）が選ぶ
+ *
+ * 曲調ごとの値は js/core/worlds.js、音色とミックスは js/audio/patches.js にある。
+ */
+(function (U) {
+  'use strict';
+  const { deepFreeze } = U.util;
+
+  const CONFIRMED = deepFreeze({
+    STEPS_PER_BAR: 16,
+    KICK_STEPS: [0, 4, 8, 12], // 四つ打ち。キックが鳴る位置はここだけ
+    PHRASE_BARS: 8, // パターンの変化はフレーズ境界でだけ起こす
+    // パートの役割。全 WORLD 共通（WORLD が変えるのは中身だけ）
+    PARTS: ['kick', 'bass', 'hats', 'perc', 'stabs', 'pad', 'waves', 'glints'],
+    SECTION_TYPES: ['intro', 'rise', 'groove', 'deep', 'breakdown'],
+  });
+
+  // WORLD によらない仮値
+  const CALIBRATION = deepFreeze({
+    version: 'core-cal-0.3',
+    candidates: 6, // フレーズごとに Generator が出す候補数
+    changeTarget: 0.4, // Selector が狙う変化の大きさ
+    maxStasis: 2, // 変化なしがこのフレーズ数続いたら、次は変化を求める
+    extraPartPenalty: 0.6, // 一度に二つ以上のパートを変える候補への減点
+    audible: 0.1, // これ未満の存在感のパートは「変わっても聞こえない」とみなす
+    // うねり: 曲全体が数分かけて近づいたり遠ざかったりする周期（小節）。WORLD の swell で上書きできる
+    swell: [72, 120, 196],
+  });
+
+  const NOTE_NAMES = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
+
+  // 和音（ルートからの半音）。3度と7度を芯に、9th / 11th で輪郭を霞ませる
+  const CHORDS = {
+    m7: [0, 3, 7, 10],
+    m9: [0, 3, 7, 10, 14],
+    m11: [0, 3, 10, 14, 17],
+    maj7: [0, 4, 7, 11],
+    maj9: [0, 4, 11, 14],
+    sus: [0, 5, 10, 14],
+    m6: [0, 3, 7, 9], // 少し切ない（ember）
+    madd9: [0, 3, 7, 14],
+    sus2: [0, 2, 7, 14],
+  };
+
+  // 進行（キーからの半音, 和音）。bars はひとつの和音を何小節続けるか
+  const PROGRESSIONS = [
+    { id: 'still', chords: [[0, 'm9']], bars: [8] },
+    { id: 'i-iv', chords: [[0, 'm9'], [5, 'm9']], bars: [8, 16] },
+    { id: 'i-VI', chords: [[0, 'm11'], [8, 'maj7']], bars: [8, 16] },
+    { id: 'i-VII', chords: [[0, 'm9'], [10, 'sus']], bars: [8, 16] },
+    { id: 'i-v', chords: [[0, 'm7'], [7, 'm7']], bars: [8] },
+    { id: 'wander', chords: [[0, 'm9'], [8, 'maj9'], [3, 'maj7'], [10, 'sus']], bars: [8] },
+    { id: 'ebb', chords: [[0, 'm11'], [0, 'm9'], [5, 'm7'], [8, 'maj7']], bars: [8] },
+    // 長調（dawn 用）。キーの根音を I とする
+    { id: 'I', chords: [[0, 'maj9']], bars: [8] },
+    { id: 'I-IV', chords: [[0, 'maj9'], [5, 'maj7']], bars: [8, 16] },
+    { id: 'I-vi', chords: [[0, 'maj7'], [9, 'm9']], bars: [8, 16] },
+    { id: 'I-IV-vi-V', chords: [[0, 'maj9'], [5, 'maj7'], [9, 'm9'], [7, 'sus']], bars: [8] },
+    // 夕暮れ（ember 用）。短調だが暗すぎず、6th・add9・sus2 で少し切なく
+    { id: 'dusk-i-iv', chords: [[0, 'madd9'], [5, 'm6']], bars: [8, 16] },
+    { id: 'dusk-four', chords: [[0, 'm6'], [8, 'maj9'], [10, 'sus2'], [0, 'madd9']], bars: [8] },
+    { id: 'dusk-i-III', chords: [[0, 'sus2'], [3, 'maj7']], bars: [8, 16] },
+  ];
+
+  // スタブ（和音を打つ位置、16分）。2小節で一組。空の小節はディレイに語らせる
+  const STABS = {
+    full: [[2], [3], [2, 10], [3, 11], [3, 10], [2, 11], [6, 14], [2, 7], [3, 8, 14], [0, 6], [2, 9, 14]],
+    sparse: [[2], [3], [6], [10], [3, 11], []],
+    drift: [[0], [2], [8], [6], [0, 8], []], // ゆっくり立ち上がる和音なので、拍の頭にも置ける
+    dub: [[2], [3], [2, 10], [3, 11], [3, 10], [6, 14], [2, 9], [3, 8], [2, 7]],
+    dubSparse: [[3], [2], [11], [3, 11], []],
+  };
+
+  // ベース: [ステップ, ベロシティ, 長さ(ステップ), オクターブ]
+  // どれも、スウィング込みでキックの拍（0/4/8/12/16）に届かない長さにしてある
+  const BASS = {
+    offbeat: [[2, 1, 1.6, 0], [6, 1, 1.6, 0], [10, 1, 1.6, 0], [14, 1, 1.6, 0]],
+    ghost: [[2, 1, 1.4, 0], [6, 1, 1.4, 0], [7, 0.45, 0.7, 12], [10, 1, 1.4, 0], [14, 1, 1.4, 0], [15, 0.5, 0.7, 12]],
+    rolling: [[2, 1, 0.7, 0], [3, 0.6, 0.7, 0], [6, 1, 0.7, 0], [7, 0.6, 0.7, 0], [10, 1, 0.7, 0], [11, 0.6, 0.7, 0], [14, 1, 0.7, 0], [15, 0.6, 0.7, 0]],
+    sparse: [[2, 1, 1.7, 0], [10, 1, 1.7, 0]],
+    swell: [[2, 0.9, 1.7, 0]],
+    dub: [[2, 1, 1.6, 0], [6, 0.9, 1.6, 0], [10, 1, 1.6, 0], [13, 0.7, 1.4, 0]],
+  };
+
+  // ハット: 16分ごとの [ベロシティ, 開き(0/1), 基本確率, 密度係数]。確率 = 基本 + 密度 × 係数
+  const hatTable = (fn) => Array.from({ length: 16 }, (_, s) => fn(s));
+  const HATS = {
+    open: hatTable((s) => (s % 4 === 2 ? [0.85, 1, 1, 0] : s % 2 === 1 ? [0.32, 0, 0, 1] : null)),
+    sixteenths: hatTable((s) => (s % 4 === 2 ? [0.9, 0, 1, 0] : s % 2 === 1 ? [0.45, 0, 0.2, 1] : [0.26, 0, 0, 0.8])),
+    sparse: hatTable((s) => (s % 4 === 2 ? [0.7, s === 2 || s === 10 ? 1 : 0, 0.85, 0] : s % 4 === 3 ? [0.25, 0, 0, 0.6] : null)),
+    breath: hatTable((s) => (s % 4 === 2 ? [0.5, 0, 0.55, 0.3] : null)),
+    whisper: hatTable((s) => (s % 4 === 2 ? [0.45, 0, 0.8, 0] : s % 2 === 1 ? [0.18, 0, 0, 0.5] : null)),
+  };
+
+  // 変化の語彙。Generator が候補を作るときに使う
+  const OPS = ['stabs.b', 'stabs.a', 'stabs.echo', 'hats.density', 'hats.style', 'perc.reroll', 'bass.pattern', 'glint.rate', 'space.bias', 'decay.bias'];
+
+  const CONTENT = deepFreeze({ NOTE_NAMES, CHORDS, PROGRESSIONS, STABS, BASS, HATS, OPS });
+
+  U.content = Object.freeze({ CONFIRMED, CALIBRATION, CONTENT });
+})((globalThis.Undertow = globalThis.Undertow || {}));

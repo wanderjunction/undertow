@@ -1,0 +1,13 @@
+# 配布・保存用の zip（履歴は git が持つ）
+*.zip
+
+# OS が作るファイル
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# 依存パッケージ（今はないが、入れたときのため）
+node_modules/
+
+# Claude の個人用の設定
+.claude/settings.local.json
