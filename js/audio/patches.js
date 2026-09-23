@@ -377,6 +377,62 @@
       riser: { from: 220, to: 3000, q: 1 },
       duck: { attack: 0.025, release: 0.14 },
     },
+
+    // デトロイト: ストリングス風のスタブ（鋸歯状波、ゆっくりめの立ち上がり）、広いストリングスのパッド、ベル風のきらめき、締まったキック
+    motor: {
+      version: 'motor-mix-0.1',
+      mix: {
+        kick: 0.42, bass: 0.24,
+        hats: 0.26, hatsVerb: 0.07,
+        perc: 0.2, percDly: 0.35, percVerb: 0.18,
+        stabDry: 0.26, stabDly: 0.36, stabVerb: 0.3,
+        padDry: 0.12, padVerb: 0.28,
+        waves: 0.08, wavesVerb: 0.05,
+        glint: 0.12, glintVerb: 0.45, glintDly: 0.2,
+        riser: 0.12, riserVerb: 0.35,
+        verbReturn: 0.45, dlyReturn: 0.6, dlyVerb: 0.22,
+      },
+      kick: { sweep: 3.6, mid: 1.35, t1: 0.024, t2: 0.1, attack: 0.003, decayAt: 0.026, decay: 0.1, floor: 0.3, lpMin: 110, lpRange: 110, lpQ: 0.9, click: 0.12, clickHz: 3000, clickFrom: 0.35, len: 1 },
+      bass: { tri: 0.3, triDetune: 3, saw: 0.08, attack: 0.006, sustain: 0.7, release: 0.015, drive: 0.8, lp: 330, lpQ: 0.7 },
+      hat: { hp: [7400, 6000], hpQ: 0.7, lp: [11000, 9500], lpQ: 0.5, pk: [9600, 8400], pkQ: 1.2, pkGain: 2, attack: 0.002, decay: [0.018, 0.065], len: [0.14, 0.55] },
+      perc: { wave: 'triangle', octave: -12, drop: 1.5, dropTime: 0.01, bpMul: 1.1, bpQ: 1.8, attack: 0.001, decay: 0.02, len: 0.25, noise: 0.3, noiseHz: 2200, noiseQ: 2.5, noiseDecay: 0.008 },
+      stab: { wave: 'sawtooth', jitter: 4, q: 1.4, cutMin: 420, cutRange: 9, env: [1.2, 1.2], envMax: 5200, envTau: 0.07, attack: 0.018, decayAt: 0.03, tauMin: 0.1, tauRange: 3.5, hp: 180, tail: 7, spread: 0.008 },
+      pad: { osc: [['sawtooth', -12, 0, 1], ['sawtooth', 12, 0, 1], ['sawtooth', 0, 12, 0.35]], jitter: 3, attack: 1.4, release: 2.4, lp: 1300, lpQ: 0.5, lfo: [0.035, 400], breath: [0.08, 0.1], spread: 1.6 },
+      glint: { index: 2.4, indexEnd: 0.2, indexTau: 0.3, attack: 0.004, decayAt: 0.006, decay: 0.9, len: 5, ratio: 3.5 },
+      waves: { lanes: [-0.6, 0, 0.6], hp: 90, lpBase: 240, lpPeak: 700, lpQ: 0.3, floor: 0.08, foam: 0, foamBand: [0, 0], rumble: 0.2, rumbleLp: 150, crackle: 0 },
+      space: { ir: 'hall', verbBand: [200, 7200], dlyBand: [380, 2800], dlyLpQ: 0.5, pan: 0.7, wow: [0.15, 0.0006], tape: 0, feedbackStart: 0.46 },
+      throw: { feedback: 0.74, send: 1.6 },
+      riser: { from: 280, to: 5600, q: 1.2 },
+      duck: { attack: 0.012, release: 0.09 },
+    },
+
+    // マイクロハウス: プチプチしたクリック（高く短い音と、ほんの一瞬のノイズ）、短く弾むベース、小さく乾いた和音、軽いキック
+    click: {
+      version: 'click-mix-0.2',
+      mix: {
+        kick: 0.41, bass: 0.27,
+        hats: 0.3, hatsVerb: 0.05,
+        perc: 0.3, percDly: 0.22, percVerb: 0.1,
+        stabDry: 0.2, stabDly: 0.18, stabVerb: 0.14,
+        padDry: 0.11, padVerb: 0.18,
+        waves: 0.06, wavesVerb: 0.03,
+        glint: 0.09, glintVerb: 0.2, glintDly: 0.14,
+        riser: 0, riserVerb: 0,
+        verbReturn: 0.35, dlyReturn: 0.5, dlyVerb: 0.15,
+      },
+      kick: { sweep: 3, mid: 1.3, t1: 0.018, t2: 0.08, attack: 0.002, decayAt: 0.02, decay: 0.07, floor: 0.3, lpMin: 110, lpRange: 90, lpQ: 0.8, click: 0.06, clickHz: 3400, clickFrom: 0.4, len: 0.7 },
+      bass: { tri: 0.35, triDetune: 2, saw: 0, attack: 0.003, sustain: 0.5, release: 0.01, drive: 0.9, lp: 300, lpQ: 0.9 },
+      hat: { hp: [8200, 6800], hpQ: 0.7, lp: [12000, 10500], lpQ: 0.5, pk: [10200, 9000], pkQ: 1.4, pkGain: 1.5, attack: 0.001, decay: [0.01, 0.03], len: [0.08, 0.25] },
+      perc: { wave: 'triangle', octave: 12, drop: 2.2, dropTime: 0.003, bpMul: 1, bpQ: 3, attack: 0.0006, decay: 0.006, len: 0.06, noise: 0.55, noiseHz: 6000, noiseQ: 2.5, noiseDecay: 0.004 },
+      stab: { wave: 'triangle', jitter: 2, q: 2, cutMin: 500, cutRange: 6, env: [1, 1], envMax: 3600, envTau: 0.03, attack: 0.003, decayAt: 0.006, tauMin: 0.035, tauRange: 3, hp: 220, tail: 6, spread: 0.004 },
+      pad: { osc: [['triangle', -6, 0, 1], ['sine', 6, 0, 0.8]], jitter: 2, attack: 2, release: 2.4, lp: 900, lpQ: 0.4, lfo: [0.03, 200], breath: [0.07, 0.1], spread: 1.2 },
+      glint: { index: 1.1, indexEnd: 0.05, indexTau: 0.03, attack: 0.001, decayAt: 0.002, decay: 0.08, len: 0.5, ratio: 2 },
+      waves: { lanes: [-0.5, 0, 0.5], hp: 120, lpBase: 300, lpPeak: 800, lpQ: 0.3, floor: 0.06, foam: 0, foamBand: [0, 0], rumble: 0.1, rumbleLp: 140, crackle: 0 },
+      space: { ir: 'room', verbBand: [240, 7000], dlyBand: [500, 3600], dlyLpQ: 0.6, pan: 0.8, wow: [0.1, 0.0004], tape: 0, feedbackStart: 0.34 },
+      throw: { feedback: 0.66, send: 1.4 },
+      riser: { from: 300, to: 4000, q: 1 },
+      duck: { attack: 0.01, release: 0.07 },
+    },
   };
 
   U.patches = Object.freeze({ PATCHES: deepFreeze(PATCHES), IMPULSES: deepFreeze(IMPULSES) });

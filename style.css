@@ -51,6 +51,8 @@
 :root[data-world="glide"] { --night: #040b0c; --haze: #0a2024; --line-rgb: 196, 240, 236; --glow-rgb: 60, 190, 180; }
 :root[data-world="ember"] { --night: #0e0906; --haze: #26170e; --line-rgb: 240, 214, 190; --glow-rgb: 214, 140, 80; }
 :root[data-world="fog"]   { --night: #0b0c0d; --haze: #1d2124; --line-rgb: 220, 226, 230; --glow-rgb: 150, 166, 178; }
+:root[data-world="motor"] { --night: #08061a; --haze: #1a1440; --line-rgb: 214, 206, 255; --glow-rgb: 120, 96, 255; }
+:root[data-world="click"] { --night: #0a0b06; --haze: #1c1f10; --line-rgb: 228, 234, 196; --glow-rgb: 170, 190, 80; }
 
 html {
   height: 100%;

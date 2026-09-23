@@ -827,6 +827,140 @@
         },
       },
     },
+
+    // デトロイト。希望と切なさが混ざった和音を、ストリングス風のスタブが刻み、広いパッドが後ろで満ちる
+    motor: {
+      label: 'motor',
+      bpm: [124, 128],
+      swing: [0.02, 0.06],
+      delaySteps: 3,
+      progressions: { ids: ['motor-four', 'motor-two', 'motor-lift'] },
+      changeChance: { intro: 0.3, rise: 0.4, groove: 0.55, deep: 0.45, breakdown: 0.5 },
+      budget: { density: 13, occupancy: 7, smear: 4, joint: 0.9 }, // 刻み続けるストリングスのぶん、占有と伸びに余裕を持たせる
+      drift: { bright: [26, 60, 140], decay: [34, 80], space: [44, 100] },
+      feedback: { base: 0.46, swing: 0.06, min: 0.36, max: 0.6 },
+      throwChance: { groove: 0.2, deep: 0.2, rise: 0.15, breakdown: 0.4 },
+      riser: true,
+      percSlots: [3, 7, 11, 14, 15],
+      percHits: [1, 3],
+      waves: { periods: [6, 8, 10], chance: 0.6, rise: [40, 64], fall: [64, 96], peak: [0.25, 0.55] },
+      glint: { starts: [0, 2, 6, 10], gaps: [3, 4, 6], range: [74, 91] },
+      sections: {
+        intro: {
+          bars: [4], kickless: true, duck: 0, open: 0.85,
+          stabPool: 'motorSparse', hatStyles: ['sparse'], bassPool: ['offbeat'], glint: 0.4,
+          cues: [
+            [0, 'waves', 0.5, 2], [0, 'pad', 1, 4], [0, 'stabs', 0.55, 4], [0, 'glints', 0.5, 4],
+            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0, 0], [0, 'perc', 0, 0],
+            [2, 'kick', 0.25, 2],
+          ],
+          next: [['rise', 1]],
+        },
+        rise: {
+          bars: [8], kickless: false, duck: 0.3, open: 0.95,
+          stabPool: 'motor', hatStyles: ['open'], bassPool: ['offbeat'], glint: 0.35,
+          cues: [
+            [0, 'kick', 1, 8], [0, 'stabs', 0.8, 4], [0, 'pad', 0.85, 8], [0, 'waves', 0.4, 8],
+            [0, 'glints', 0.4, 4], [2, 'hats', 0.6, 6], [4, 'bass', 0.9, 4], [4, 'perc', 0.45, 4],
+          ],
+          next: [['groove', 1]],
+        },
+        groove: {
+          bars: [24, 32, 40], kickless: false, duck: 0.4, open: 1.05,
+          stabPool: 'motor', hatStyles: ['sixteenths', 'open'], bassPool: ['offbeat', 'ghost', 'rolling'], glint: 0.3,
+          cues: [
+            [0, 'kick', 1, 0], [0, 'bass', 1, 0], [0, 'hats', 0.9, 2], [0, 'perc', 0.6, 2],
+            [0, 'stabs', 1, 2], [0, 'pad', 0.7, 4], [0, 'waves', 0.3, 4], [0, 'glints', 0.35, 4],
+          ],
+          next: [['deep', 0.4], ['breakdown', 0.45], ['groove', 0.15]],
+        },
+        deep: {
+          bars: [16, 24], kickless: false, duck: 0.35, open: 0.85,
+          stabPool: 'motorSparse', hatStyles: ['open', 'sparse'], bassPool: ['offbeat', 'sparse'], glint: 0.4,
+          cues: [
+            [0, 'kick', 1, 0], [0, 'bass', 0.9, 2], [0, 'hats', 0.6, 4], [0, 'perc', 0.35, 4],
+            [0, 'stabs', 0.8, 4], [0, 'pad', 0.9, 4], [0, 'waves', 0.4, 4], [0, 'glints', 0.5, 4],
+          ],
+          next: [['groove', 0.55], ['breakdown', 0.45]],
+        },
+        breakdown: {
+          bars: [8, 12, 16], kickless: true, duck: 0, open: 1.25,
+          stabPool: 'motorSparse', hatStyles: ['sparse'], bassPool: ['offbeat'], glint: 0.6,
+          cues: [
+            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0.2, 2], [0, 'perc', 0, 2],
+            [0, 'stabs', 0.9, 2], [0, 'pad', 1, 3], [0, 'waves', 0.6, 4], [0, 'glints', 0.8, 2],
+          ],
+          next: [['rise', 0.5], ['groove', 0.5]],
+        },
+      },
+    },
+
+    // マイクロハウス。プチプチした細かなクリックと、跳ねるスウィング。低音は短く弾み、和音は小さく乾いている
+    click: {
+      label: 'click',
+      bpm: [122, 126],
+      swing: [0.1, 0.16],
+      delaySteps: 3,
+      progressions: { ids: ['still', 'i-v', 'i-iv'] },
+      changeChance: { intro: 0.3, rise: 0.45, groove: 0.6, deep: 0.5, breakdown: 0.5 },
+      budget: { density: 15, occupancy: 6, smear: 2.4, joint: 0.9 },
+      drift: { bright: [24, 56, 130], decay: [30, 70], space: [40, 90] },
+      feedback: { base: 0.34, swing: 0.06, min: 0.24, max: 0.46 },
+      throwChance: { groove: 0.15, deep: 0.15, rise: 0.1, breakdown: 0.3 },
+      riser: false,
+      percSlots: [1, 3, 5, 6, 7, 9, 11, 13, 14, 15],
+      percHits: [6, 10], // 2 小節ぶん。クリックが主役
+      waves: { periods: [6, 8, 10], chance: 0.5, rise: [40, 64], fall: [64, 96], peak: [0.2, 0.45] },
+      glint: { starts: [3, 7, 11, 14], gaps: [3, 5], range: [76, 93] },
+      sections: {
+        intro: {
+          bars: [4], kickless: true, duck: 0, open: 0.8,
+          stabPool: 'click', hatStyles: ['sparse'], bassPool: ['pluck'], glint: 0.4,
+          cues: [
+            [0, 'waves', 0.4, 2], [0, 'pad', 0.5, 4], [0, 'stabs', 0.5, 2], [0, 'glints', 0.5, 2],
+            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0, 0], [0, 'perc', 0.6, 2],
+            [2, 'kick', 0.3, 2],
+          ],
+          next: [['rise', 1]],
+        },
+        rise: {
+          bars: [8], kickless: false, duck: 0.15, open: 0.9,
+          stabPool: 'click', hatStyles: ['sixteenths'], bassPool: ['pluck'], glint: 0.35,
+          cues: [
+            [0, 'kick', 1, 4], [0, 'stabs', 0.7, 4], [0, 'pad', 0.4, 8], [0, 'waves', 0.3, 8],
+            [0, 'glints', 0.45, 4], [0, 'perc', 0.8, 4], [2, 'hats', 0.6, 4], [4, 'bass', 0.9, 2],
+          ],
+          next: [['groove', 1]],
+        },
+        groove: {
+          bars: [24, 32, 40], kickless: false, duck: 0.2, open: 1,
+          stabPool: 'click', hatStyles: ['sixteenths', 'sparse'], bassPool: ['pluck', 'bounce'], glint: 0.3,
+          cues: [
+            [0, 'kick', 1, 0], [0, 'bass', 1, 0], [0, 'hats', 0.8, 2], [0, 'perc', 1, 2],
+            [0, 'stabs', 0.85, 2], [0, 'pad', 0.35, 4], [0, 'waves', 0.2, 4], [0, 'glints', 0.4, 4],
+          ],
+          next: [['deep', 0.45], ['breakdown', 0.35], ['groove', 0.2]],
+        },
+        deep: {
+          bars: [16, 24], kickless: false, duck: 0.2, open: 0.8,
+          stabPool: 'click', hatStyles: ['sparse'], bassPool: ['bounce', 'pluck'], glint: 0.35,
+          cues: [
+            [0, 'kick', 1, 0], [0, 'bass', 0.9, 2], [0, 'hats', 0.5, 4], [0, 'perc', 0.85, 4],
+            [0, 'stabs', 0.6, 4], [0, 'pad', 0.5, 4], [0, 'waves', 0.3, 4], [0, 'glints', 0.5, 4],
+          ],
+          next: [['groove', 0.6], ['breakdown', 0.4]],
+        },
+        breakdown: {
+          bars: [8, 12], kickless: true, duck: 0, open: 1.1,
+          stabPool: 'click', hatStyles: ['sparse'], bassPool: ['pluck'], glint: 0.5,
+          cues: [
+            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0.25, 2], [0, 'perc', 0.7, 2],
+            [0, 'stabs', 0.8, 2], [0, 'pad', 1, 3], [0, 'waves', 0.6, 4], [0, 'glints', 0.8, 2],
+          ],
+          next: [['rise', 0.4], ['groove', 0.6]],
+        },
+      },
+    },
   };
 
   U.worlds = Object.freeze({ WORLDS: deepFreeze(WORLDS), IDS: Object.freeze(Object.keys(WORLDS)) });
