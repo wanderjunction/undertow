@@ -10,7 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400&amp;family=Jost:wght@300;400&amp;display=swap">
-<link rel="stylesheet" href="style.css">
+<!-- ?v= は版ごとに上げる（ブラウザが古い CSS / JS を覚えたまま、新しいページだけ読むことがないように） -->
+<link rel="stylesheet" href="style.css?v=1.9">
 </head>
 <body>
 <canvas id="sea" aria-hidden="true"></canvas>
@@ -47,7 +48,7 @@
   <p class="hint" lang="en"><kbd>space</kbd> play / stop</p>
 </footer>
 
-<p class="version" lang="en">v1.8</p>
+<p class="version" lang="en">v1.9</p>
 
 <button id="about-open" class="about-open" type="button" lang="en" aria-haspopup="dialog">about</button>
 
@@ -130,14 +131,14 @@
 
 <p id="status" class="visually-hidden" role="status" aria-live="polite"></p>
 
-<script src="js/core/util.js"></script>
-<script src="js/core/rng.js"></script>
-<script src="js/core/content.js"></script>
-<script src="js/core/worlds.js"></script>
-<script src="js/core/director.js"></script>
-<script src="js/audio/patches.js"></script>
-<script src="js/audio/voices.js"></script>
-<script src="js/audio/transport.js"></script>
-<script src="js/app.js"></script>
+<script src="js/core/util.js?v=1.9"></script>
+<script src="js/core/rng.js?v=1.9"></script>
+<script src="js/core/content.js?v=1.9"></script>
+<script src="js/core/worlds.js?v=1.9"></script>
+<script src="js/core/director.js?v=1.9"></script>
+<script src="js/audio/patches.js?v=1.9"></script>
+<script src="js/audio/voices.js?v=1.9"></script>
+<script src="js/audio/transport.js?v=1.9"></script>
+<script src="js/app.js?v=1.9"></script>
 </body>
 </html>

@@ -26,7 +26,7 @@
   const elapsed = document.getElementById('elapsed');
   const status = document.getElementById('status');
   const canvas = document.getElementById('sea');
-  const lowest = document.querySelector('.volume'); // 水平線はこの下に引く
+  const lowest = document.getElementById('worlds'); // 水平線は曲調ボタンの下に引く（波にかからないように）
 
   let ctx = null;
   let input = null;
@@ -432,7 +432,7 @@
     H = window.innerHeight;
     canvas.width = Math.round(W * dpr);
     canvas.height = Math.round(H * dpr);
-    horizon = Math.min(H - 48, Math.max(lowest.getBoundingClientRect().bottom + 40, H * 0.6));
+    horizon = Math.min(H - 48, Math.max(lowest.getBoundingClientRect().bottom + 28, H * 0.55));
     if (motion.matches) draw(0);
   }
 
@@ -504,6 +504,7 @@
   }
 
   window.addEventListener('resize', resize);
+  if (document.fonts) document.fonts.ready.then(resize); // 文字の幅が決まると、ボタンの折り返しが変わる
   window.addEventListener('load', resize);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(resize);
   if (motion.addEventListener) motion.addEventListener('change', setMotion);

@@ -59,6 +59,7 @@ html {
 body {
   margin: 0;
   min-height: 100%;
+  min-height: 100svh; /* スマホのアドレスバーを除いた、見えている高さ */
   box-sizing: border-box;
   display: grid;
   grid-template-rows: 1fr auto;
@@ -89,7 +90,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding-block: max(40px, 8vh) max(150px, 34vh);
+  padding-block: clamp(32px, 8svh, 96px) clamp(90px, 27svh, 320px); /* 高さに合わせて、下の文字まで一画面に収める */
   text-align: center;
 }
 
@@ -571,6 +572,25 @@ kbd {
 
 .about-close:hover {
   color: var(--ink);
+}
+
+/* スマホ: 上下の余白を画面の高さに合わせて縮め、下の文字まで一画面に収める */
+@media (max-width: 600px) {
+  .stage {
+    padding-block: clamp(36px, 7svh, 64px) clamp(88px, 19svh, 190px);
+  }
+
+  .controls {
+    margin-top: clamp(24px, 4.5svh, 44px);
+  }
+
+  .volume {
+    margin-top: clamp(18px, 3svh, 30px);
+  }
+
+  .worlds {
+    margin-top: clamp(14px, 2.4svh, 22px);
+  }
 }
 
 @media (max-width: 480px) {
