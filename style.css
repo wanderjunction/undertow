@@ -386,24 +386,27 @@ kbd {
 
 /* 曲調の切り替え（仮のデザイン） */
 .worlds {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)); /* 同じ幅のボタンを 5 列に */
   gap: 8px;
+  width: min(100%, 340px);
   margin-top: 22px;
 }
 
-/* 広い画面では 10 個ずつ 2 段に */
+/* 広い画面では 10 列（20 個なら 10 個ずつ 2 段） */
 @media (min-width: 820px) {
   .worlds {
-    display: grid;
-    grid-template-columns: repeat(10, auto);
-    justify-content: center;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    width: 720px;
   }
 }
 
 .worlds button {
-  padding: 5px 12px;
+  min-width: 0;
+  padding: 5px 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   border: 1px solid var(--rule);
   border-radius: 999px;
   background: transparent;
