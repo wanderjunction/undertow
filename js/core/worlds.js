@@ -961,6 +961,146 @@
         },
       },
     },
+
+    // 夕暮れ（バレアリック）。暖かい長調の中で、ナイロンギターが和音を 1〜2 小節に 1 回だけ鳴らして余韻を聴かせ、
+    // ときどき単音のフレーズを弾く（きらめきの役割をギターの単音で）。コンガとシェイカー、丸いベース
+    sunset: {
+      label: 'sunset',
+      mode: 'major',
+      voicing: 'guitar', // 和音はギターで押さえられる形（6 弦、低い弦に根音）
+      bpm: [104, 110],
+      swing: [0.03, 0.07],
+      delaySteps: 3,
+      progressions: { ids: ['sun-float', 'sun-drift', 'sun-six'] },
+      changeChance: { intro: 0.3, rise: 0.4, groove: 0.55, deep: 0.45, breakdown: 0.5 },
+      budget: { density: 12, occupancy: 6, smear: 3.4, joint: 0.85 },
+      drift: { bright: [30, 70, 160], decay: [38, 90], space: [48, 110] },
+      feedback: { base: 0.46, swing: 0.05, min: 0.36, max: 0.58 },
+      throwChance: { groove: 0.15, deep: 0.15, rise: 0.1, breakdown: 0.3 },
+      riser: false,
+      percSlots: [3, 6, 7, 10, 11, 14, 15],
+      percHits: [2, 4],
+      waves: { periods: [6, 8, 10], chance: 0.5, rise: [40, 64], fall: [64, 96], peak: [0.2, 0.5] },
+      glint: { starts: [2, 6, 10, 14], gaps: [3, 4, 6], range: [62, 81] }, // 単音はギターの音域（D4〜A5）
+      sections: {
+        intro: {
+          bars: [4], kickless: true, duck: 0, open: 0.85,
+          stabPool: 'letRing', hatStyles: ['sparse'], bassPool: ['sparse'], glint: 0.45,
+          cues: [
+            [0, 'waves', 0.4, 2], [0, 'pad', 1, 4], [0, 'stabs', 0.6, 2], [0, 'glints', 0.5, 4],
+            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0, 0], [0, 'perc', 0, 0],
+            [2, 'kick', 0.25, 2],
+          ],
+          next: [['rise', 1]],
+        },
+        rise: {
+          bars: [8], kickless: false, duck: 0.2, open: 0.9,
+          stabPool: 'letRing', hatStyles: ['sparse'], bassPool: ['sparse', 'offbeat'], glint: 0.4,
+          cues: [
+            [0, 'kick', 0.9, 8], [0, 'stabs', 0.85, 4], [0, 'pad', 0.85, 8], [0, 'waves', 0.3, 8],
+            [0, 'glints', 0.5, 4], [2, 'hats', 0.5, 6], [2, 'perc', 0.6, 4], [4, 'bass', 0.9, 4],
+          ],
+          next: [['groove', 1]],
+        },
+        groove: {
+          bars: [24, 32, 40], kickless: false, duck: 0.25, open: 1,
+          stabPool: 'letRing', hatStyles: ['sixteenths', 'sparse'], bassPool: ['offbeat', 'dub', 'sparse'], glint: 0.5,
+          cues: [
+            [0, 'kick', 0.9, 0], [0, 'bass', 1, 0], [0, 'hats', 0.7, 2], [0, 'perc', 0.85, 2],
+            [0, 'stabs', 1, 2], [0, 'pad', 0.7, 4], [0, 'waves', 0.25, 4], [0, 'glints', 0.7, 4],
+          ],
+          next: [['deep', 0.4], ['breakdown', 0.45], ['groove', 0.15]],
+        },
+        deep: {
+          bars: [16, 24], kickless: false, duck: 0.2, open: 0.85,
+          stabPool: 'letRing', hatStyles: ['sparse'], bassPool: ['sparse', 'offbeat'], glint: 0.5,
+          cues: [
+            [0, 'kick', 0.85, 0], [0, 'bass', 0.9, 2], [0, 'hats', 0.5, 4], [0, 'perc', 0.6, 4],
+            [0, 'stabs', 0.75, 4], [0, 'pad', 0.9, 4], [0, 'waves', 0.3, 4], [0, 'glints', 0.7, 4],
+          ],
+          next: [['groove', 0.55], ['breakdown', 0.45]],
+        },
+        breakdown: {
+          bars: [8, 12, 16], kickless: true, duck: 0, open: 1.15,
+          stabPool: 'letRing', hatStyles: ['sparse'], bassPool: ['sparse'], glint: 0.55,
+          cues: [
+            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0.2, 2], [0, 'perc', 0.3, 2],
+            [0, 'stabs', 0.9, 2], [0, 'pad', 1, 3], [0, 'waves', 0.45, 4], [0, 'glints', 0.8, 2],
+          ],
+          next: [['rise', 0.5], ['groove', 0.5]],
+        },
+      },
+    },
+
+    // ミニマル・アシッド。TB-303 風のベースが、強い共鳴のフィルターで一音ごとに鳴き、ときどき音程が滑る。
+    // フィルターのつまみは数十小節かけてゆっくり回る。ブレイクでもキックなしで鳴き続ける
+    acid: {
+      label: 'acid',
+      bpm: [122, 128],
+      swing: [0, 0.03],
+      delaySteps: 3,
+      progressions: { ids: ['still', 'i-iv', 'i-v'], bars: [8, 16] },
+      changeChance: { intro: 0.3, rise: 0.4, groove: 0.5, deep: 0.45, breakdown: 0.45 },
+      budget: { density: 16, occupancy: 7, smear: 3, joint: 0.9 },
+      drift: { bright: [28, 64, 150], decay: [34, 80], space: [44, 100] },
+      feedback: { base: 0.5, swing: 0.06, min: 0.38, max: 0.62 },
+      throwChance: { groove: 0.25, deep: 0.25, rise: 0.15, breakdown: 0.4 },
+      riser: true,
+      percSlots: [4, 12, 7, 15],
+      percHits: [1, 2],
+      acid: { tweak: [10, 18, 32] }, // フィルターのつまみが回る周期（小節）
+      waves: { periods: [6, 8, 10], chance: 0.4, rise: [40, 64], fall: [64, 96], peak: [0.2, 0.45] },
+      glint: { starts: [0, 6, 10], gaps: [4, 6], range: [74, 91] },
+      sections: {
+        intro: {
+          bars: [4], kickless: true, duck: 0, open: 0.8,
+          stabPool: 'dubSparse', hatStyles: ['sparse'], bassPool: ['acidSparse'], glint: 0.3,
+          cues: [
+            [0, 'waves', 0.3, 2], [0, 'pad', 0.6, 4], [0, 'stabs', 0.3, 4], [0, 'glints', 0.3, 4],
+            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0, 0], [0, 'perc', 0, 0],
+            [2, 'kick', 0.3, 2],
+          ],
+          next: [['rise', 1]],
+        },
+        rise: {
+          bars: [8], kickless: false, duck: 0.25, open: 0.85,
+          stabPool: 'dubSparse', hatStyles: ['sixteenths'], bassPool: ['acidSparse'], glint: 0.25,
+          cues: [
+            [0, 'kick', 1, 4], [0, 'bass', 0.85, 4], [0, 'stabs', 0.35, 4], [0, 'pad', 0.5, 8],
+            [0, 'waves', 0.2, 8], [0, 'glints', 0.3, 4], [2, 'hats', 0.6, 4], [4, 'perc', 0.5, 4],
+          ],
+          next: [['groove', 1]],
+        },
+        groove: {
+          bars: [24, 32, 40], kickless: false, duck: 0.35, open: 1,
+          stabPool: 'dubSparse', hatStyles: ['sixteenths', 'open'], bassPool: ['acidRoll', 'acidSwing', 'acidSparse'], glint: 0.2,
+          cues: [
+            [0, 'kick', 1, 0], [0, 'bass', 1, 0], [0, 'hats', 0.8, 2], [0, 'perc', 0.6, 2],
+            [0, 'stabs', 0.35, 2], [0, 'pad', 0.4, 4], [0, 'waves', 0.15, 4], [0, 'glints', 0.25, 4],
+          ],
+          next: [['deep', 0.4], ['breakdown', 0.45], ['groove', 0.15]],
+        },
+        deep: {
+          bars: [16, 24], kickless: false, duck: 0.3, open: 0.85,
+          stabPool: 'dubSparse', hatStyles: ['sparse'], bassPool: ['acidSparse', 'acidDrop'], glint: 0.3,
+          cues: [
+            [0, 'kick', 1, 0], [0, 'bass', 0.9, 2], [0, 'hats', 0.5, 4], [0, 'perc', 0.4, 4],
+            [0, 'stabs', 0.3, 4], [0, 'pad', 0.6, 4], [0, 'waves', 0.2, 4], [0, 'glints', 0.35, 4],
+          ],
+          next: [['groove', 0.55], ['breakdown', 0.45]],
+        },
+        breakdown: {
+          // キックが引いても、アシッドだけは鳴き続ける（キックが無いので低域は重ならない）
+          bars: [8, 12], kickless: true, duck: 0, open: 1.2,
+          stabPool: 'dubSparse', hatStyles: ['sparse'], bassPool: ['acidSparse'], glint: 0.4,
+          cues: [
+            [0, 'kick', 0, 0], [0, 'bass', 0.7, 2], [0, 'hats', 0.2, 2], [0, 'perc', 0, 2],
+            [0, 'stabs', 0.4, 2], [0, 'pad', 0.8, 3], [0, 'waves', 0.3, 4], [0, 'glints', 0.5, 2],
+          ],
+          next: [['rise', 0.4], ['groove', 0.6]],
+        },
+      },
+    },
   };
 
   U.worlds = Object.freeze({ WORLDS: deepFreeze(WORLDS), IDS: Object.freeze(Object.keys(WORLDS)) });

@@ -132,6 +132,68 @@
     return c;
   }
 
+  // 撥弦（Karplus–Strong）: 弦の長さぶんの遅れで、弾いた瞬間のノイズを何度も折り返す。
+  // 折り返すたびに隣どうしを平均して角を丸めるので、高い倍音から先に消えて、弦らしく丸くなっていく。
+  // Web Audio の遅延の輪は約 3 ms より短くできず高い弦を作れないので、音ごとに一度だけ計算して使い回す（録音ではない）
+  // variant: 同じ弦でも弾くたびに少しずつ違う音にするための版（ノイズと指先の柔らかさが違う）。
+  // ナイロン弦の音は 8 kHz より上をほとんど持たないので、半分のサンプルレートで作ってメモリと計算を節約する
+  function pluckBuffer(ctx, midi, G, variant) {
+    const soft = clamp(G.soft + (variant - (G.variants - 1) / 2) * G.softSpread, 0, 0.95);
+    const key = 'pluck:' + midi + ':' + variant + ':' + [soft, G.pluckPos, G.t60[0], G.t60[1], G.len, G.rate].join(',');
+    return shared(ctx, key, (r) => {
+      const sr = Math.min(ctx.sampleRate, G.rate);
+      const f = mtof(midi);
+      const len = Math.round(sr * G.len);
+      const buf = ctx.createBuffer(1, len, sr);
+      const out = buf.getChannelData(0);
+      // 平均が半サンプル遅らせるぶんを引き、残りの端数は 1 次のオールパスで合わせる（和音で音程がずれないように）
+      const period = sr / f - 0.5;
+      let N = Math.floor(period);
+      let frac = period - N;
+      if (frac < 0.1) {
+        N -= 1;
+        frac += 1;
+      }
+      const C = (1 - frac) / (1 + frac);
+      // 余韻: 低い弦ほど長い（60 dB 下がるまでの秒数を、音程で補間）
+      const k = clamp((midi - 40) / 40, 0, 1);
+      const rho = Math.pow(10, -3 / ((G.t60[0] + (G.t60[1] - G.t60[0]) * k) * f));
+      // 弾いた瞬間: ノイズを指先の柔らかさで丸め（ナイロン弦）、弾く位置の櫛形で倍音を間引く
+      const exc = new Float32Array(N);
+      let lp = 0;
+      for (let i = 0; i < N; i++) {
+        lp += (1 - soft) * (r.range(-1, 1) - lp);
+        exc[i] = lp;
+      }
+      const P = Math.max(1, Math.round(N * G.pluckPos));
+      const line = new Float32Array(N);
+      let mean = 0;
+      for (let i = 0; i < N; i++) {
+        line[i] = exc[i] - (i >= P ? exc[i - P] : 0);
+        mean += line[i] / N;
+      }
+      let peak = 0;
+      for (let i = 0; i < N; i++) peak = Math.max(peak, Math.abs((line[i] -= mean)));
+      for (let i = 0; i < N; i++) line[i] /= peak || 1;
+      let idx = 0;
+      let prev = 0;
+      let apX = 0;
+      let apY = 0;
+      for (let n = 0; n < len; n++) {
+        const cur = line[idx];
+        out[n] = cur;
+        const avg = rho * 0.5 * (cur + prev);
+        prev = cur;
+        const y = C * avg + apX - C * apY;
+        apX = avg;
+        apY = y;
+        line[idx] = y;
+        idx = idx + 1 === N ? 0 : idx + 1;
+      }
+      return buf;
+    });
+  }
+
   const VOICES = { kick: 1, bass: 1, hat: 1, perc: 1, stab: 1, glint: 1, wave: 1 };
 
   // ---------------------------------------------------------------------------
@@ -153,6 +215,7 @@
       this.duckFree = 0;
       this.throwUntil = 0;
       this.feedback = P.space.feedbackStart;
+      this.lastPluck = -1; // ギターの単音で、直前に使った波形の版
       this.Sw = { ...SWELL, ...(P.swell || {}) };
       this._build();
     }
@@ -306,6 +369,18 @@
       this._send(this.percBus, M.percVerb, this.verb);
 
       this.stabBus = this._gain(1);
+      if (P.stab.guitar) {
+        // ギターの胴の響き: 低い空気の共鳴と表板のふくらみ。耳に痛い帯域を少し下げ、ベースとぶつかる最低域は切る
+        const G = P.stab.guitar;
+        const body = G.body.map(([hz, q, gain]) => {
+          const b = this._filter('peaking', hz, q);
+          b.gain.value = gain;
+          return b;
+        });
+        this.guitarBody = this._filter('highpass', G.hp, 0.5);
+        chain(this.guitarBody, ...body, this.stabBus);
+        this.guitarStrings = []; // 弦ごとに、いま鳴っている音（弾き直すと前の音を止める）
+      }
       this._send(this.stabBus, M.stabDry, this.music);
       this.stabSend = this._send(this.stabBus, M.stabDly, this.dly);
       this._send(this.stabBus, M.stabVerb, this.verb);
@@ -515,6 +590,7 @@
     _bass(e, t) {
       const ctx = this.ctx;
       const B = this.P.bass;
+      if (B.acid) return this._acid(e, t, B.acid);
       const hz = mtof(e.note);
       const dur = e.len * this.stepDur;
       const oscs = [];
@@ -548,6 +624,34 @@
         x.start(t);
         x.stop(end);
       }
+    }
+
+    // アシッド（TB-303 風）: 鋸歯状波 1 本を、共鳴の強いローパスで一音ごとに開いて閉じる。
+    // アクセントの音はフィルターがより開き、共鳴が強く、閉じるのが速い。from のある音は前の音程から滑って入る
+    _acid(e, t, A) {
+      const ctx = this.ctx;
+      const hz = mtof(e.note);
+      const dur = e.len * this.stepDur;
+      const accent = e.vel > A.accentAt;
+      const o = ctx.createOscillator();
+      o.type = A.wave;
+      if (e.from !== undefined) {
+        o.frequency.setValueAtTime(mtof(e.from), t);
+        o.frequency.exponentialRampToValueAtTime(hz, t + A.glide);
+      } else {
+        o.frequency.setValueAtTime(hz, t);
+      }
+      const cut = A.cutMin * Math.pow(A.cutRange, e.cut === undefined ? 0.5 : e.cut);
+      const lp = this._filter('lowpass', cut, A.q + (accent ? A.accentQ : 0));
+      lp.frequency.setValueAtTime(Math.min(cut * (accent ? A.envAccent : A.env), A.envMax), t);
+      lp.frequency.setTargetAtTime(cut, t + 0.002, accent ? A.decayAccent : A.decay);
+      const amp = ctx.createGain();
+      amp.gain.setValueAtTime(0, t);
+      amp.gain.linearRampToValueAtTime(e.vel * (accent ? A.accentGain : 1), t + A.attack);
+      amp.gain.setTargetAtTime(0, t + Math.max(dur, A.attack + 0.001), A.release);
+      o.connect(lp).connect(amp).connect(this.bassBus);
+      o.start(t);
+      o.stop(t + dur + A.release * 8);
     }
 
     // ハット: ノイズの帯域を絞る（パッチで帯域と減衰が変わる）
@@ -607,6 +711,7 @@
     _stab(e, t) {
       const ctx = this.ctx;
       const S = this.P.stab;
+      if (S.guitar) return this._guitar(e, t, S.guitar);
       const cutoff = S.cutMin * Math.pow(S.cutRange, e.bright);
       const tau = S.tauMin * Math.pow(S.tauRange, e.decay);
       const sum = this._gain(1 / e.notes.length);
@@ -636,6 +741,76 @@
         o.start(S.spread > 0 ? t + this.r.range(0, S.spread) : t);
         o.stop(end);
       }
+    }
+
+    // ナイロンギターのストローク。notes は低い弦から順（配列の後ろが 1 弦）。
+    // 手は 16 分で上下しているので、表の 16 分はダウン（全部の弦を低い方から）、裏の 16 分はアップ（高い弦の数本を、上から軽く）。
+    // 1 本の弦は 1 音しか鳴らせないので、弾き直すと前の音は止まる。弦ごとに強さ・間・音の版・音程がわずかに揺れる。
+    // bright は指の当たりの明るさ、decay は余韻を手で止めるまでの長さ
+    _guitar(e, t, G) {
+      const ctx = this.ctx;
+      const r = this.r;
+      const up = Math.round(e.step) % 2 === 1;
+      const strings = e.notes.map((n, i) => ({ note: n, string: 6 - e.notes.length + i }));
+      const hit = up ? strings.slice(-Math.min(strings.length, G.upStrings + (r.chance(0.5) ? 1 : 0))).reverse() : strings;
+      const gap = r.range(G.strum[0], G.strum[1]) * (1.25 - 0.5 * e.vel) * (up ? 0.8 : 1); // 強く弾くほど速く振り抜く
+      const ring = G.ring[0] * Math.pow(G.ring[1] / G.ring[0], e.decay);
+      const tone = this._filter('lowpass', G.tone[0] * Math.pow(G.tone[1] / G.tone[0], e.bright), 0.5);
+      tone.connect(this.guitarBody);
+      const level = (G.gain * e.vel * (up ? G.upVel : 1)) / Math.sqrt(strings.length);
+      let at = t + r.range(G.late[0], G.late[1]); // 人の手の、わずかな前後
+      hit.forEach(({ note, string }, i) => {
+        if (i > 0) at += gap * r.range(0.7, 1.3);
+        const held = this.guitarStrings[string];
+        if (held && held.at < at) {
+          // 同じ弦を弾き直す: 前の音の予定を消して、すぐに止める
+          held.amp.gain.cancelScheduledValues(at);
+          held.amp.gain.setTargetAtTime(0, at, G.damp);
+        }
+        // 前と同じ版は続けない（同じ波形の繰り返しは機械的に聞こえる）
+        let variant = r.int(0, G.variants - 1);
+        if (held && variant === held.variant) variant = (variant + 1) % G.variants;
+        const src = ctx.createBufferSource();
+        src.buffer = pluckBuffer(ctx, note, G, variant);
+        // 弦ごとのわずかな音程のずれと、強く弾いた瞬間だけ少し高くなる音程
+        const rate = 1 + r.range(-G.detune, G.detune);
+        src.playbackRate.setValueAtTime(rate * (1 + G.bend * e.vel), at);
+        src.playbackRate.setTargetAtTime(rate, at + 0.004, G.bendTime);
+        const amp = ctx.createGain();
+        amp.gain.setValueAtTime(level * (1 - G.fall * i) * r.range(0.85, 1.1), at);
+        amp.gain.setTargetAtTime(0, at + ring, G.mute);
+        src.connect(amp).connect(tone);
+        src.start(at);
+        src.stop(Math.min(at + ring + G.mute * 6, at + src.buffer.duration));
+        this.guitarStrings[string] = { amp, at, variant };
+      });
+    }
+
+    // ナイロンギターの単音（sunset のきらめき）: 撥弦モデルの弦を 1 本だけ弾く。
+    // 前と同じ波形は続けず、音程と弾く瞬間がわずかに揺れる。余韻はきらめきのバスからディレイと残響へ流れる
+    _pluckNote(e, t, N) {
+      const ctx = this.ctx;
+      const r = this.r;
+      let variant = r.int(0, N.variants - 1);
+      if (variant === this.lastPluck) variant = (variant + 1) % N.variants;
+      this.lastPluck = variant;
+      const at = t + r.range(N.late[0], N.late[1]);
+      const src = ctx.createBufferSource();
+      src.buffer = pluckBuffer(ctx, e.note, N, variant);
+      const rate = 1 + r.range(-N.detune, N.detune);
+      src.playbackRate.setValueAtTime(rate * (1 + N.bend * e.vel), at);
+      src.playbackRate.setTargetAtTime(rate, at + 0.004, N.bendTime);
+      const amp = ctx.createGain();
+      amp.gain.setValueAtTime(N.gain * e.vel, at);
+      amp.gain.setTargetAtTime(0, at + N.ring, N.mute);
+      src
+        .connect(amp)
+        .connect(this._filter('lowpass', N.tone, 0.5))
+        .connect(this._filter('highpass', N.hp, 0.5))
+        .connect(this._panner((e.pan || 0) * N.width))
+        .connect(this.glintBus);
+      src.start(at);
+      src.stop(Math.min(at + N.ring + N.mute * 6, at + src.buffer.duration));
     }
 
     // 和音が変わるたび、古いパッドをゆっくり退かせて新しいパッドを満たす
@@ -714,6 +889,10 @@
       const G = this.P.glint;
       if (G.bowl) {
         this._bowl(e, t, G.bowl);
+        return;
+      }
+      if (G.guitar) {
+        this._pluckNote(e, t, G.guitar);
         return;
       }
       const hz = mtof(e.note);

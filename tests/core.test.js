@@ -119,6 +119,76 @@ test('ベースの音はキックの拍をまたがない（低域を同時に�
   }
 });
 
+test('アシッド: 滑る音は同じ小節の前の音から入り、フィルターのつまみはゆっくり回る', () => {
+  const acidWorlds = IDS.filter((w) => WORLDS[w].acid);
+  assert.ok(acidWorlds.length > 0);
+  for (const world of acidWorlds) {
+    for (const seed of SEEDS.slice(0, 4)) {
+      let slides = 0;
+      let lo = 1;
+      let hi = 0;
+      for (const { plan } of run(seed, 400, world).bars) {
+        const bass = plan.events.filter((e) => e.voice === 'bass');
+        bass.forEach((e, i) => {
+          assert.ok(e.cut >= 0 && e.cut <= 1, `cut ${e.cut}`);
+          lo = Math.min(lo, e.cut);
+          hi = Math.max(hi, e.cut);
+          if (e.from === undefined) return;
+          slides++;
+          assert.ok(i > 0 && bass[i - 1].note === e.from, 'slide from the previous note');
+          assert.ok(bass[i - 1].step + bass[i - 1].len >= e.step, 'the previous note is held until the slide');
+        });
+      }
+      assert.ok(slides > 50, `${world}: slides ${slides}`);
+      assert.ok(hi - lo > 0.3, `${world}: the filter hardly moves (${lo}..${hi})`);
+    }
+  }
+  // ほかの WORLD のベースには、アシッドの印がつかない
+  for (const { plan } of run(SEEDS[0], 200, 'tide').bars) {
+    for (const e of plan.events) assert.ok(!('cut' in e) && !('from' in e));
+  }
+});
+
+test('ギターの曲調（sunset）: 和音は 1 小節に 1 回まで（余韻を聴かせる）', () => {
+  for (const world of IDS.filter((w) => WORLDS[w].voicing === 'guitar')) {
+    for (const seed of SEEDS.slice(0, 6)) {
+      let strums = 0;
+      for (const { plan } of run(seed, 400, world).bars) {
+        const n = plan.events.filter((e) => e.voice === 'stab').length;
+        assert.ok(n <= 1, `${world} bar ${plan.bar}: ${n} strums`);
+        strums += n;
+      }
+      assert.ok(strums > 100, `${world}: the guitar hardly plays (${strums})`);
+    }
+  }
+});
+
+test('ギターの押さえ方: 標準チューニングの 6 弦で押さえられる形（低い弦に根音、1 弦まで途切れない、幅と指の数）', () => {
+  const { voiceChord } = U.core;
+  const { GUITAR } = CONTENT;
+  const types = new Set();
+  for (const w of IDS.filter((x) => WORLDS[x].voicing === 'guitar')) {
+    for (const id of WORLDS[w].progressions.ids) for (const [, type] of CONTENT.PROGRESSIONS.find((p) => p.id === id).chords) types.add(type);
+  }
+  assert.ok(types.size > 0);
+  for (const type of types) {
+    for (let key = 0; key < 12; key++) {
+      const c = voiceChord(key, 0, type, [72, 88], 'guitar');
+      const n = c.stab;
+      assert.ok(n.length >= 4 && n.length <= 6, `${type}@${key}: ${n.length} strings`);
+      const s0 = 6 - n.length;
+      const frets = n.map((m, i) => m - GUITAR.tuning[s0 + i]);
+      for (const f of frets) assert.ok(f >= 0 && f <= GUITAR.frets, `${type}@${key}: fret ${f}`);
+      assert.equal(((n[0] % 12) + 12) % 12, ((c.bass % 12) + 12) % 12, `${type}@${key}: root on the lowest string`);
+      const fretted = frets.filter((f) => f > 0);
+      if (fretted.length) assert.ok(Math.max(...fretted) - Math.min(...fretted) <= GUITAR.span + 1, `${type}@${key}: stretch ${frets}`);
+      assert.deepEqual(pcs(n), pcs(c.pad), `${type}@${key}: every chord tone is played`);
+    }
+  }
+  // ほかの WORLD の和音は、今までどおり鍵盤の形
+  assert.deepEqual(voiceChord(0, 0, 'm9', [72, 88]).stab, [48, 51, 55, 58, 62]); // C m9 を C3 から
+});
+
 test('状態の書き手は Director だけ: 状態もプランも凍結されている', () => {
   const d = new Director({ seed: 7 });
   const plan = d.nextBar();
@@ -204,7 +274,7 @@ test('パート間の和声: ベース・パッド・きらめき・音のある
 });
 
 test('イベントの値はすべて有限で、決められた範囲に収まる', () => {
-  const unit = ['vel', 'presence', 'duck', 'bright', 'decay', 'peak'];
+  const unit = ['vel', 'presence', 'duck', 'bright', 'decay', 'peak', 'cut'];
   for (const { plan } of [...cases(12, 300)].flatMap((c) => c.bars)) {
     for (const e of plan.events) {
       assert.ok(e.step >= 0 && e.step < 16, `step ${e.step}`);

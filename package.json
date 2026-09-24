@@ -1,6 +1,6 @@
 {
   "name": "undertow",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "private": true,
   "description": "静かな波のような、アンビエントでミニマルな四つ打ちテクノを生成し続けるプレイヤー",
   "scripts": {

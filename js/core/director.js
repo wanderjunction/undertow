@@ -16,7 +16,7 @@
   const { deepFreeze, clamp, mod, smooth } = U.util;
   const { derive, formatSeed } = U.rng;
   const { CONFIRMED, CALIBRATION: CAL, CONTENT } = U.content;
-  const { STABS, BASS, HATS, OPS, CHORDS, PROGRESSIONS, NOTE_NAMES } = CONTENT;
+  const { STABS, BASS, HATS, OPS, CHORDS, PROGRESSIONS, NOTE_NAMES, GUITAR } = CONTENT;
   const { WORLDS, IDS: WORLD_IDS } = U.worlds;
 
   const STEPS = CONFIRMED.STEPS_PER_BAR;
@@ -96,11 +96,74 @@
   }
 
   // 一つの和音から、スタブ・パッド・ベース・きらめきの音をまとめて決める（パート間で和声を揃える）
-  function voiceChord(keyPc, off, type, glintRange) {
+  // ギターの押さえ方（sunset）: 標準チューニングの 6 弦で、実際に押さえられる形を探す。
+  // 低い弦に根音、和音の音はすべて含む。弾く弦は根音の弦から 1 弦（高い E）まで途切れずに続ける
+  // （Renderer は、配列の後ろから 1 弦・2 弦…と弦を割り当てる）。押さえる指は 4 本まで（いちばん低いフレットはセーハ）、
+  // 幅は 4 フレット以内（見つからなければ 5 フレット）。開放弦と低い位置を好み、隣の弦どうしの半音のぶつかりを避ける
+  const guitarShapes = new Map();
+  function guitarVoicing(pc, iv) {
+    const key = pc + ':' + iv.join(',');
+    if (guitarShapes.has(key)) return guitarShapes.get(key);
+    const tones = new Set(iv.map((i) => mod(pc + i, 12)));
+    let best = null;
+    for (let span = GUITAR.span; span <= GUITAR.span + 1 && !best; span++) {
+      let bestScore = Infinity;
+      for (let s0 = 0; s0 <= 2; s0++) {
+        const opts = [];
+        for (let s = s0; s < 6; s++) {
+          const o = [];
+          for (let f = 0; f <= GUITAR.frets; f++) {
+            const n = mod(GUITAR.tuning[s] + f, 12);
+            if (s === s0 ? n === pc : tones.has(n)) o.push(f);
+          }
+          opts.push(o);
+        }
+        const pick = [];
+        const walk = (k) => {
+          if (k < opts.length) {
+            for (const f of opts[k]) {
+              pick.push(f);
+              walk(k + 1);
+              pick.pop();
+            }
+            return;
+          }
+          const notes = pick.map((f, i) => GUITAR.tuning[s0 + i] + f);
+          if (new Set(notes.map((n) => mod(n, 12))).size !== tones.size) return;
+          const fretted = pick.filter((f) => f > 0);
+          let low = 0;
+          if (fretted.length) {
+            low = Math.min(...fretted);
+            if (Math.max(...fretted) - low > span) return;
+            const barre = fretted.filter((f) => f === low).length;
+            if (barre >= 2 && pick.includes(0)) return; // セーハと開放弦は一緒に鳴らさない
+            if (fretted.length - barre + 1 > GUITAR.fingers) return;
+          }
+          let score = low * 0.6 - notes.length * 0.8 - pick.filter((f) => f === 0).length * 0.5 + fretted.length * 0.2;
+          for (let i = 1; i < notes.length; i++) {
+            const d = notes[i] - notes[i - 1];
+            if (d === 1 || d === -1) score += 1.5;
+            if (d < 0) score += 0.8;
+          }
+          if (notes[0] > 52) score += (notes[0] - 52) * 0.2;
+          if (score < bestScore) {
+            bestScore = score;
+            best = notes;
+          }
+        };
+        walk(0);
+      }
+    }
+    guitarShapes.set(key, best);
+    return best;
+  }
+
+  function voiceChord(keyPc, off, type, glintRange, voicing) {
     const iv = CHORDS[type];
     const pc = mod(keyPc + off, 12);
     const root = 45 + mod(pc - 45, 12); // A2..G♯3
-    const stab = iv.map((i) => root + i);
+    const close = iv.map((i) => root + i);
+    const stab = (voicing === 'guitar' && guitarVoicing(pc, iv)) || close;
     const tones = iv.map((i) => mod(pc + i, 12));
     const glint = [];
     for (let m = glintRange[0]; m <= glintRange[1]; m++) if (tones.includes(m % 12)) glint.push(m);
@@ -110,7 +173,7 @@
       root,
       bass: 33 + mod(pc - 33, 12), // A1..G♯2
       stab,
-      pad: stab.map((n) => n + 12),
+      pad: close.map((n) => n + 12), // パッドはいつも鍵盤の形（ギターの形は和音の打ち方だけ）
       glint,
     };
   }
@@ -326,6 +389,8 @@
       };
       // うねりは専用の stream から作る（ほかの決定の乱数を一つも動かさない）
       this._swell = makeDrift(derive(s, 'swell'), this.W.swell || CAL.swell);
+      // アシッドのつまみ: フィルターの開き具合が、数十小節かけてゆっくり回る（acid の WORLD だけ。専用の stream）
+      this._acid = this.W.acid ? makeDrift(derive(s, 'acid'), this.W.acid.tweak) : null;
       this._state = null;
       this._bar = 0;
     }
@@ -400,7 +465,7 @@
       const h = s.harmony;
       const [off, type] = h.chords[Math.floor((bar - h.start) / h.bars) % h.chords.length];
       if (!s.chord || s.chord.key !== off + ':' + type) {
-        s.chord = voiceChord(this.identity.keyPc, off, type, this.W.glint.range);
+        s.chord = voiceChord(this.identity.keyPc, off, type, this.W.glint.range, this.W.voicing);
         controls.push({ kind: 'pad', step: 0, notes: s.chord.pad });
       }
       s.bar = bar;
@@ -495,10 +560,15 @@
         });
       }
 
-      if (!W.poly) for (const [st, v, len, oct] of BASS[P.bass]) {
+      let prevBass = null;
+      if (!W.poly) for (const [st, v, len, oct, fx] of BASS[P.bass]) {
         const p = rampAt(L.bass, at(st));
         if (p < 0.02) continue;
-        events.push({ voice: 'bass', step: swing(st), note: s.chord.bass + oct, vel: round(v * p * h.range(0.9, 1)), len });
+        const e = { voice: 'bass', step: swing(st), note: s.chord.bass + oct, vel: round(v * p * h.range(0.9, 1)), len };
+        if (fx === 'g' && prevBass !== null) e.from = prevBass; // 前の音から滑って入る
+        if (this._acid) e.cut = round(clamp(0.5 + 0.38 * this._acid(at(st)) + 0.3 * (rampAt(s.open, at(st)) - 1), 0.05, 0.95));
+        prevBass = e.note;
+        events.push(e);
       }
 
       HATS[P.hats.style].forEach((e, st) => {
@@ -640,5 +710,5 @@
     }
   }
 
-  U.core = Object.freeze({ Director, features, evaluate, select, changedParts, rampAt, voiceChord, makeIdentity, worldOf });
+  U.core = Object.freeze({ Director, features, evaluate, select, changedParts, rampAt, voiceChord, guitarVoicing, makeIdentity, worldOf });
 })((globalThis.Undertow = globalThis.Undertow || {}));

@@ -25,6 +25,9 @@
     abyss: { seconds: 9, pre: 0.06, bright: [0.45, 0.4], power: 2 }, // 深く、とても長い
   };
 
+  // sunset のナイロン弦（和音と単音で同じ弦の音を使う。撥弦モデルの設定）
+  const NYLON = { soft: 0.74, variants: 2, softSpread: 0.03, pluckPos: 0.17, t60: [5, 2.5], len: 4.2, rate: 22050 };
+
   const PATCHES = {
     // v1.0 の音。波だけ控えめにした（本体 0.21 → 0.12、泡 0.45 → 0.3）
     tide: {
@@ -432,6 +435,84 @@
       throw: { feedback: 0.66, send: 1.4 },
       riser: { from: 300, to: 4000, q: 1 },
       duck: { attack: 0.01, release: 0.07 },
+    },
+
+    // 夕暮れ: ナイロンギター風のストローク（三角波、鳴り始めを少しずつずらす）、コンガ、シェイカー、丸いベース、暖かいパッド
+    sunset: {
+      version: 'sunset-mix-0.4',
+      mix: {
+        kick: 0.34, bass: 0.24,
+        hats: 0.16, hatsVerb: 0.06,
+        perc: 0.24, percDly: 0.25, percVerb: 0.2,
+        stabDry: 0.28, stabDly: 0.3, stabVerb: 0.26,
+        padDry: 0.12, padVerb: 0.26,
+        waves: 0.07, wavesVerb: 0.04,
+        glint: 0.12, glintVerb: 0.4, glintDly: 0.2,
+        riser: 0, riserVerb: 0,
+        verbReturn: 0.45, dlyReturn: 0.55, dlyVerb: 0.22,
+      },
+      kick: { sweep: 2.8, mid: 1.3, t1: 0.03, t2: 0.12, attack: 0.005, decayAt: 0.032, decay: 0.12, floor: 0.32, lpMin: 110, lpRange: 55, lpQ: 0.7, click: 0, clickHz: 0, clickFrom: 1, len: 1.1 },
+      bass: { tri: 0.35, triDetune: 3, saw: 0, attack: 0.01, sustain: 0.75, release: 0.03, drive: 0.5, lp: 260, lpQ: 0.6 },
+      hat: { hp: [6000, 5000], hpQ: 0.6, lp: [9000, 8000], lpQ: 0.5, pk: [7000, 6400], pkQ: 0.9, pkGain: 1, attack: 0.006, decay: [0.03, 0.06], len: [0.14, 0.3] },
+      perc: { wave: 'sine', octave: -24, drop: 1.25, dropTime: 0.015, bpMul: 1, bpQ: 1.1, attack: 0.002, decay: 0.06, len: 0.4, noise: 0.15, noiseHz: 1800, noiseQ: 1.5, noiseDecay: 0.01 },
+      // guitar: 撥弦モデルのナイロンギター。soft は指先の柔らかさ（variants 個の版で softSpread ずつ変える）、
+      // pluckPos は弾く位置（ブリッジからの割合）、t60 は低い弦 → 高い弦の余韻（秒）、rate は弦の音を作るサンプルレート、
+      // strum は弦 1 本ごとのずれ（秒）、upStrings はアップで弾く高い弦の数、late は手の前後（秒）、
+      // ring は余韻を止めるまで（decay 0 → 1）、damp は弾き直したときに前の音が止まる速さ、
+      // detune は弦ごとの音程のずれ（比）、bend は強く弾いた瞬間の音程の上がり（比）、
+      // tone は指の当たりの明るさ（bright 0 → 1）、hp はベースとぶつかる最低域を切る周波数、body は胴の響き [Hz, Q, dB]
+      stab: {
+        wave: 'triangle', jitter: 3, q: 1, cutMin: 700, cutRange: 5, env: [1.6, 1.2], envMax: 5000, envTau: 0.05, attack: 0.002, decayAt: 0.004, tauMin: 0.18, tauRange: 2.2, hp: 160, tail: 6, spread: 0.03,
+        guitar: {
+          ...NYLON, gain: 1.55,
+          strum: [0.025, 0.045], upStrings: 3, upVel: 0.7, fall: 0.03, late: [-0.004, 0.009],
+          ring: [1.5, 4], mute: 0.25, damp: 0.012, detune: 0.0012, bend: 0.003, bendTime: 0.04,
+          tone: [1000, 3400], hp: 90, body: [[110, 1, 3], [220, 1.2, 2.5], [3000, 0.8, -4]],
+        },
+      },
+      pad: { osc: [['sawtooth', -8, 0, 0.7], ['triangle', 8, 0, 1], ['sine', 0, -12, 0.3]], jitter: 2, attack: 2.2, release: 2.8, lp: 1000, lpQ: 0.4, lfo: [0.026, 260], breath: [0.07, 0.1], spread: 1.4 },
+      // きらめきは、ナイロンギターの単音（ring 秒で手を離し、余韻はディレイと残響へ）
+      glint: {
+        index: 1.2, indexEnd: 0.05, indexTau: 0.06, attack: 0.002, decayAt: 0.004, decay: 0.5, len: 3, ratio: 1,
+        guitar: { ...NYLON, gain: 4.5, late: [0, 0.012], ring: 3.2, mute: 0.3, detune: 0.001, bend: 0.003, bendTime: 0.04, tone: 2800, hp: 150, width: 0.4 },
+      },
+      waves: { lanes: [-0.55, 0, 0.55], hp: 80, lpBase: 200, lpPeak: 600, lpQ: 0.3, floor: 0.06, foam: 0, foamBand: [0, 0], rumble: 0.15, rumbleLp: 150, crackle: 0 },
+      space: { ir: 'hall', verbBand: [170, 6000], dlyBand: [340, 2400], dlyLpQ: 0.5, pan: 0.65, wow: [0.14, 0.0006], tape: 0.6, feedbackStart: 0.46 },
+      throw: { feedback: 0.7, send: 1.5 },
+      riser: { from: 220, to: 3000, q: 1 },
+      duck: { attack: 0.02, release: 0.12 },
+    },
+
+    // ミニマル・アシッド: 鋸歯状波 1 本を強い共鳴のローパスで一音ごとに開いて閉じる（TB-303 風）。乾いたキック、細いハット、暗いパッド
+    acid: {
+      version: 'acid-mix-0.1',
+      mix: {
+        kick: 0.42, bass: 0.2,
+        hats: 0.24, hatsVerb: 0.05,
+        perc: 0.18, percDly: 0.4, percVerb: 0.15,
+        stabDry: 0.14, stabDly: 0.3, stabVerb: 0.2,
+        padDry: 0.08, padVerb: 0.2,
+        waves: 0.06, wavesVerb: 0.03,
+        glint: 0.08, glintVerb: 0.35, glintDly: 0.18,
+        riser: 0.1, riserVerb: 0.3,
+        verbReturn: 0.4, dlyReturn: 0.6, dlyVerb: 0.2,
+      },
+      kick: { sweep: 3.8, mid: 1.4, t1: 0.02, t2: 0.09, attack: 0.002, decayAt: 0.022, decay: 0.09, floor: 0.3, lpMin: 110, lpRange: 110, lpQ: 0.9, click: 0.1, clickHz: 3200, clickFrom: 0.35, len: 0.9 },
+      // acid: 一音ごとのフィルター。q は共鳴（dB）、cut は Director が送る 0..1 のつまみ、アクセントは vel が accentAt を超えた音
+      bass: {
+        tri: 0, triDetune: 0, saw: 0, attack: 0.003, sustain: 1, release: 0.02, drive: 1.3, lp: 6000, lpQ: 0.5,
+        acid: { wave: 'sawtooth', q: 14, accentQ: 4, cutMin: 170, cutRange: 12, env: 2.2, envAccent: 4, envMax: 7000, decay: 0.09, decayAccent: 0.05, attack: 0.003, release: 0.02, accentAt: 0.85, accentGain: 1.25, glide: 0.06 },
+      },
+      hat: { hp: [7800, 6400], hpQ: 0.7, lp: [11500, 10000], lpQ: 0.5, pk: [9800, 8600], pkQ: 1.3, pkGain: 1.5, attack: 0.0015, decay: [0.012, 0.045], len: [0.1, 0.4] },
+      perc: { wave: 'triangle', octave: -12, drop: 1.6, dropTime: 0.006, bpMul: 1.2, bpQ: 2.5, attack: 0.001, decay: 0.012, len: 0.15, noise: 0.6, noiseHz: 1600, noiseQ: 1.8, noiseDecay: 0.012 },
+      stab: { wave: 'square', jitter: 2, q: 3, cutMin: 260, cutRange: 10, env: [1.5, 1.5], envMax: 4000, envTau: 0.04, attack: 0.004, decayAt: 0.008, tauMin: 0.05, tauRange: 3, hp: 200, tail: 7, spread: 0.004 },
+      pad: { osc: [['sawtooth', -6, 0, 1], ['square', 6, -12, 0.35]], jitter: 2, attack: 2.4, release: 2.6, lp: 560, lpQ: 0.6, lfo: [0.028, 200], breath: [0.06, 0.1], spread: 1.1 },
+      glint: { index: 1.8, indexEnd: 0.1, indexTau: 0.15, attack: 0.003, decayAt: 0.005, decay: 0.5, len: 3.5, ratio: 1.5 },
+      waves: { lanes: [-0.6, 0, 0.6], hp: 100, lpBase: 220, lpPeak: 650, lpQ: 0.3, floor: 0.05, foam: 0, foamBand: [0, 0], rumble: 0.12, rumbleLp: 140, crackle: 0 },
+      space: { ir: 'plate', verbBand: [220, 6500], dlyBand: [420, 3200], dlyLpQ: 0.6, pan: 0.75, wow: [0.12, 0.0005], tape: 0.9, feedbackStart: 0.5 },
+      throw: { feedback: 0.78, send: 1.7 },
+      riser: { from: 240, to: 5000, q: 1.3 },
+      duck: { attack: 0.01, release: 0.08 },
     },
   };
 

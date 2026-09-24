@@ -53,6 +53,8 @@
 :root[data-world="fog"]   { --night: #0b0c0d; --haze: #1d2124; --line-rgb: 220, 226, 230; --glow-rgb: 150, 166, 178; }
 :root[data-world="motor"] { --night: #08061a; --haze: #1a1440; --line-rgb: 214, 206, 255; --glow-rgb: 120, 96, 255; }
 :root[data-world="click"] { --night: #0a0b06; --haze: #1c1f10; --line-rgb: 228, 234, 196; --glow-rgb: 170, 190, 80; }
+:root[data-world="sunset"] { --night: #140a14; --haze: #3a1630; --line-rgb: 255, 214, 200; --glow-rgb: 250, 110, 110; }
+:root[data-world="acid"]  { --night: #050a04; --haze: #0f2308; --line-rgb: 214, 255, 170; --glow-rgb: 140, 255, 60; }
 
 html {
   height: 100%;

@@ -45,6 +45,10 @@ class FakeParam {
     assert.ok(tc > 0, `${this.label}: time constant ${tc}`);
     return this._push('target', v, t);
   }
+  cancelScheduledValues(t) {
+    this.events = this.events.filter((e) => e.time < t);
+    return this;
+  }
   setValueCurveAtTime(curve, t, d) {
     for (const v of curve) assert.ok(Number.isFinite(v));
     return this._push('curve', curve[curve.length - 1], t, d);
@@ -172,6 +176,129 @@ test('ゴースト・キック: 音源を作らず、呼吸（サイドチェイ
     voices._kick({ step: 0, vel: 1, presence: 1, duck: 0.5 }, 1);
     assert.equal(ctx.sources.length, before, `${world}: 音源が作られた`);
     assert.equal(voices.duck.gain.events.filter((e) => e.kind === 'curve').length, 1, `${world}: 呼吸しない`);
+  }
+});
+
+test('アシッド: 滑る音は前の音程から入り、アクセントはフィルターがより開く', () => {
+  const acids = IDS.filter((w) => PATCHES[w].bass.acid);
+  assert.ok(acids.length > 0);
+  const { mtof } = U.util;
+  for (const world of acids) {
+    const peakOf = (vel) => {
+      const ctx = new FakeContext();
+      const voices = new U.Voices(ctx, new U.core.Director({ seed: 1, world }).identity);
+      const before = ctx.params.length;
+      voices._bass({ step: 0, note: 45, vel, len: 1, cut: 0.5 }, 1);
+      const lp = ctx.params.slice(before).find((p) => p.label === 'biquad.frequency' && p.events.length);
+      return lp.events[0].value;
+    };
+    assert.ok(peakOf(1) > peakOf(0.6) * 1.3, `${world}: accent does not open the filter`);
+    const ctx = new FakeContext();
+    const voices = new U.Voices(ctx, new U.core.Director({ seed: 1, world }).identity);
+    voices._bass({ step: 0, note: 45, vel: 0.7, len: 1, cut: 0.5, from: 40 }, 1);
+    const osc = ctx.sources[ctx.sources.length - 1];
+    const ev = osc.frequency.events;
+    assert.equal(ev[0].kind, 'set');
+    assert.ok(Math.abs(ev[0].value - mtof(40)) < 1e-6, 'slide starts from the previous pitch');
+    assert.equal(ev[1].kind, 'exp');
+    assert.ok(Math.abs(ev[1].value - mtof(45)) < 1e-6, 'slide lands on the note');
+  }
+});
+
+// バッファの音程（自己相関のいちばん高い山の位置から、周期を小数点以下まで推定）
+function pitchOf(buffer) {
+  const d = buffer.getChannelData(0);
+  const sr = buffer.sampleRate;
+  const from = Math.floor(sr * 0.05);
+  const n = Math.floor(sr * 0.4);
+  const ac = (lag) => {
+    let s = 0;
+    for (let i = from; i < from + n; i++) s += d[i] * d[i + lag];
+    return s;
+  };
+  let best = 0;
+  let bestLag = 0;
+  for (let lag = Math.floor(sr / 1000); lag < Math.floor(sr / 60); lag++) {
+    const v = ac(lag);
+    if (v > best) {
+      best = v;
+      bestLag = lag;
+    }
+  }
+  const a = ac(bestLag - 1);
+  const c = ac(bestLag + 1);
+  const shift = (0.5 * (a - c)) / (a - 2 * best + c);
+  return sr / (bestLag + shift);
+}
+
+test('ナイロンギター: 弦は音程どおりに鳴り、表の 16 分はダウン（全部の弦）、裏の 16 分はアップ（高い弦の数本）', () => {
+  const guitars = IDS.filter((w) => PATCHES[w].stab.guitar);
+  assert.ok(guitars.length > 0);
+  const notes = [40, 47, 52, 56, 59, 64]; // E（022100）: 低い弦から順
+  const midiOf = (s) => 69 + 12 * Math.log2(pitchOf(s.buffer) / 440);
+  for (const world of guitars) {
+    for (let k = 0; k < 4; k++) {
+      const ctx = new FakeContext();
+      ctx.sampleRate = 22050;
+      const voices = new U.Voices(ctx, new U.core.Director({ seed: k + 1, world }).identity);
+      const strum = (step, t) => {
+        const before = ctx.sources.length;
+        voices._stab({ step, notes, vel: 0.9, bright: 0.5, decay: 0.5 }, t);
+        return ctx.sources.slice(before).sort((a, b) => a.startAt - b.startAt);
+      };
+      const down = strum(2, 1);
+      assert.equal(down.length, notes.length, `${world}: a downstroke plays every string`);
+      down.forEach((s, i) => {
+        assert.ok(Math.abs(midiOf(s) - notes[i]) * 100 < 5, `${world}: string ${i} is ${((midiOf(s) - notes[i]) * 100).toFixed(1)} cents off`);
+      });
+      const up = strum(3, 2);
+      assert.ok(up.length >= 3 && up.length < notes.length, `${world}: an upstroke catches only the high strings (${up.length})`);
+      up.forEach((s, i) => assert.ok(Math.abs(midiOf(s) - notes[notes.length - 1 - i]) < 0.05, `${world}: upstroke order`));
+    }
+  }
+});
+
+test('ナイロンギターの単音: 弦を 1 本だけ、音程どおりに鳴らし、同じ波形を続けない', () => {
+  for (const world of IDS.filter((w) => PATCHES[w].glint.guitar)) {
+    const ctx = new FakeContext();
+    ctx.sampleRate = 22050;
+    const voices = new U.Voices(ctx, new U.core.Director({ seed: 1, world }).identity);
+    const pluck = (note) => {
+      const before = ctx.sources.length;
+      voices._glint({ step: 2, note, vel: 0.8, pan: 0.5 }, 1);
+      const made = ctx.sources.slice(before);
+      assert.equal(made.length, 1, `${world}: one string for one note`);
+      return made[0];
+    };
+    const a = pluck(69);
+    const cents = (69 + 12 * Math.log2(pitchOf(a.buffer) / 440) - 69) * 100;
+    assert.ok(Math.abs(cents) < 5, `${world}: single note is ${cents.toFixed(1)} cents off`);
+    const b = pluck(69);
+    assert.notEqual(a.buffer, b.buffer, `${world}: the same waveform twice in a row`);
+  }
+});
+
+test('ナイロンギター: 1 本の弦は 1 音だけ。弾き直すと前の音は止まり、同じ波形は続けて使わない', () => {
+  for (const world of IDS.filter((w) => PATCHES[w].stab.guitar)) {
+    const ctx = new FakeContext();
+    const voices = new U.Voices(ctx, new U.core.Director({ seed: 1, world }).identity);
+    const notes = [45, 52, 57, 61, 64];
+    const p0 = ctx.params.length;
+    const s0 = ctx.sources.length;
+    voices._stab({ step: 0, notes, vel: 0.9, bright: 0.5, decay: 1 }, 1);
+    const firstAmps = ctx.params.slice(p0).filter((p) => p.label === 'gain.gain' && p.events.length === 2);
+    const firstSources = ctx.sources.slice(s0);
+    assert.equal(firstAmps.length, notes.length);
+    const s1 = ctx.sources.length;
+    voices._stab({ step: 4, notes, vel: 0.9, bright: 0.5, decay: 1 }, 1.5);
+    const second = ctx.sources.slice(s1);
+    for (const amp of firstAmps) {
+      const last = amp.events[amp.events.length - 1];
+      assert.equal(last.kind, 'target');
+      assert.equal(last.value, 0);
+      assert.ok(last.time >= 1.49 && last.time < 1.65, `${world}: the old note stops when the string is struck again (${last.time})`);
+    }
+    firstSources.forEach((s, i) => assert.notEqual(s.buffer, second[i].buffer, `${world}: string ${i} repeats the same waveform`));
   }
 });
 
