@@ -548,13 +548,13 @@
 
     // 漂うアシッド: 聞こえないキック、ゆっくり鳴く 303 をディレイと残響へも送る、厚く暗いパッド
     float: {
-      version: 'float-mix-0.2',
+      version: 'float-mix-0.3',
       mix: {
-        kick: 0, bass: 0.25, bassDly: 0.45, bassVerb: 0.32,
+        kick: 0, bass: 0.18, bassDly: 0.5, bassVerb: 0.45, // ベースは奥へ（直接の音を下げ、エコーと残響に溶かす）
         hats: 0.14, hatsVerb: 0.06,
         perc: 0.14, percDly: 0.4, percVerb: 0.2,
         stabDry: 0.2, stabDly: 0.45, stabVerb: 0.38,
-        padDry: 0.22, padVerb: 0.5,
+        padDry: 0.25, padVerb: 0.56, // ベースが引いたぶん、周りの空気を少し足す
         waves: 0.16, wavesVerb: 0.09,
         glint: 0.08, glintVerb: 0.45, glintDly: 0.2,
         riser: 0, riserVerb: 0,
@@ -563,7 +563,7 @@
       kick: { ghost: true }, // 音は出さない。拍ごとの呼吸だけ
       bass: {
         tri: 0, triDetune: 0, saw: 0, attack: 0.004, sustain: 1, release: 0.04, drive: 1, lp: 5000, lpQ: 0.5,
-        acid: { wave: 'sawtooth', q: 10, accentQ: 3, cutMin: 150, cutRange: 9, env: 1.8, envAccent: 3, envMax: 4500, decay: 0.14, decayAccent: 0.08, attack: 0.004, release: 0.04, accentAt: 0.85, accentGain: 1.2, glide: 0.09 },
+        acid: { wave: 'sawtooth', q: 8, accentQ: 2, cutMin: 150, cutRange: 7, env: 1.5, envAccent: 2.2, envMax: 3600, decay: 0.18, decayAccent: 0.11, attack: 0.006, release: 0.05, accentAt: 0.85, accentGain: 1.1, glide: 0.12 }, // 柔らかく鳴く
       },
       hat: { hp: [6600, 5400], hpQ: 0.6, lp: [9000, 8000], lpQ: 0.5, pk: [8000, 7000], pkQ: 1, pkGain: 1, attack: 0.003, decay: [0.02, 0.05], len: [0.12, 0.35] },
       perc: { wave: 'triangle', octave: -12, drop: 1.4, dropTime: 0.01, bpMul: 1, bpQ: 1.4, attack: 0.002, decay: 0.03, len: 0.3, noise: 0.2, noiseHz: 1800, noiseQ: 2, noiseDecay: 0.01 },

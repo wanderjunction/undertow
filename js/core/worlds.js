@@ -1182,8 +1182,8 @@
       bpm: [100, 108],
       swing: [0, 0.03],
       delaySteps: 3,
-      progressions: { ids: ['still', 'i-iv', 'i-v'], bars: [16] },
-      changeChance: { intro: 0.3, rise: 0.4, groove: 0.45, deep: 0.4, breakdown: 0.45 },
+      progressions: { ids: ['i-iv', 'i-v'], bars: [8, 16] }, // 同じ和音のまま動かない進行は使わない
+      changeChance: { intro: 0.3, rise: 0.4, groove: 0.52, deep: 0.45, breakdown: 0.45 },
       budget: { density: 12, occupancy: 6, smear: 3.6, joint: 0.85 },
       drift: { bright: [30, 70, 160], decay: [40, 90], space: [48, 110] },
       feedback: { base: 0.56, swing: 0.06, min: 0.44, max: 0.68 },
@@ -1191,7 +1191,7 @@
       riser: false,
       percSlots: [4, 12, 14],
       percHits: [1, 1],
-      acid: { tweak: [16, 28, 48] },
+      acid: { tweak: [12, 20, 36] },
       waves: { periods: [8, 10, 12], chance: 0.8, rise: [64, 96], fall: [96, 144], peak: [0.3, 0.6] },
       glint: { starts: [2, 6, 10], gaps: [4, 6], range: [74, 91] },
       sections: {
@@ -1206,7 +1206,7 @@
         },
         rise: {
           bars: [8], kickless: false, duck: 0.3, open: 0.9,
-          stabPool: 'dubSparse', hatStyles: ['breath'], bassPool: ['acidSparse'], glint: 0.3,
+          stabPool: 'dubSparse', hatStyles: ['breath'], bassPool: ['acidSparse', 'acidLow'], glint: 0.3,
           cues: [
             [0, 'kick', 1, 8], [0, 'bass', 0.8, 4], [0, 'stabs', 0.3, 4], [0, 'pad', 0.9, 8],
             [0, 'waves', 0.5, 8], [0, 'glints', 0.35, 4], [2, 'hats', 0.3, 6], [4, 'perc', 0.2, 4],
@@ -1215,7 +1215,7 @@
         },
         groove: {
           bars: [24, 32, 40], kickless: false, duck: 0.4, open: 1,
-          stabPool: 'dubSparse', hatStyles: ['breath', 'whisper'], bassPool: ['acidSparse', 'acidDrop'], glint: 0.3,
+          stabPool: 'dubSparse', hatStyles: ['breath', 'whisper'], bassPool: ['acidSparse', 'acidDrift', 'acidCall', 'acidDrop'], glint: 0.3,
           cues: [
             [0, 'kick', 1, 0], [0, 'bass', 0.95, 0], [0, 'hats', 0.35, 2], [0, 'perc', 0.25, 2],
             [0, 'stabs', 0.3, 2], [0, 'pad', 0.9, 4], [0, 'waves', 0.45, 4], [0, 'glints', 0.35, 4],
@@ -1224,7 +1224,7 @@
         },
         deep: {
           bars: [16, 24], kickless: false, duck: 0.35, open: 0.85,
-          stabPool: 'dubSparse', hatStyles: ['breath'], bassPool: ['acidDrop', 'acidSparse'], glint: 0.35,
+          stabPool: 'dubSparse', hatStyles: ['breath'], bassPool: ['acidDrop', 'acidLow', 'acidDrift'], glint: 0.35,
           cues: [
             [0, 'kick', 1, 0], [0, 'bass', 0.85, 2], [0, 'hats', 0.25, 4], [0, 'perc', 0.15, 4],
             [0, 'stabs', 0.25, 4], [0, 'pad', 1, 4], [0, 'waves', 0.55, 4], [0, 'glints', 0.45, 4],
@@ -1233,7 +1233,7 @@
         },
         breakdown: {
           bars: [8, 12, 16], kickless: true, duck: 0, open: 1.2,
-          stabPool: 'dubSparse', hatStyles: ['breath'], bassPool: ['acidSparse'], glint: 0.45,
+          stabPool: 'dubSparse', hatStyles: ['breath'], bassPool: ['acidSparse', 'acidCall'], glint: 0.45,
           cues: [
             [0, 'kick', 0, 0], [0, 'bass', 0.75, 2], [0, 'hats', 0.1, 2], [0, 'perc', 0, 2],
             [0, 'stabs', 0.3, 2], [0, 'pad', 1, 3], [0, 'waves', 0.7, 4], [0, 'glints', 0.6, 2],
