@@ -514,6 +514,139 @@
       riser: { from: 240, to: 5000, q: 1.3 },
       duck: { attack: 0.01, release: 0.08 },
     },
+
+    // フェイズ: マリンバのような撥弦（弦の真ん中を弾いて偶数倍音を抜いた、うつろで木のような音）、木魚のパーカッション
+    phase: {
+      version: 'phase-mix-0.2',
+      mix: {
+        kick: 0.37, bass: 0.25,
+        hats: 0.18, hatsVerb: 0.05,
+        perc: 0.18, percDly: 0.25, percVerb: 0.15,
+        stabDry: 0.14, stabDly: 0.2, stabVerb: 0.2,
+        padDry: 0.12, padVerb: 0.26,
+        waves: 0.07, wavesVerb: 0.04,
+        glint: 0.26, glintVerb: 0.36, glintDly: 0.14,
+        riser: 0, riserVerb: 0,
+        verbReturn: 0.42, dlyReturn: 0.5, dlyVerb: 0.2,
+      },
+      kick: { sweep: 3, mid: 1.3, t1: 0.025, t2: 0.1, attack: 0.004, decayAt: 0.028, decay: 0.1, floor: 0.3, lpMin: 110, lpRange: 70, lpQ: 0.8, click: 0.04, clickHz: 2400, clickFrom: 0.5, len: 0.9 },
+      bass: { tri: 0.3, triDetune: 2, saw: 0, attack: 0.006, sustain: 0.6, release: 0.02, drive: 0.6, lp: 300, lpQ: 0.6 },
+      hat: { hp: [7000, 5800], hpQ: 0.6, lp: [10000, 9000], lpQ: 0.5, pk: [8600, 7600], pkQ: 1, pkGain: 1, attack: 0.002, decay: [0.012, 0.04], len: [0.1, 0.3] },
+      perc: { wave: 'sine', octave: 0, drop: 1.2, dropTime: 0.004, bpMul: 1, bpQ: 4, attack: 0.0008, decay: 0.025, len: 0.15, noise: 0.1, noiseHz: 3000, noiseQ: 2, noiseDecay: 0.004 },
+      stab: { wave: 'triangle', jitter: 2, q: 1, cutMin: 600, cutRange: 4, env: [1.2, 1], envMax: 4000, envTau: 0.05, attack: 0.004, decayAt: 0.01, tauMin: 0.1, tauRange: 2.5, hp: 200, tail: 6, spread: 0.006 },
+      pad: { osc: [['triangle', -5, 0, 1], ['sine', 5, 0, 0.7]], jitter: 2, attack: 2.4, release: 2.8, lp: 900, lpQ: 0.4, lfo: [0.03, 200], breath: [0.06, 0.1], spread: 1.2 },
+      glint: {
+        index: 1, indexEnd: 0.05, indexTau: 0.05, attack: 0.002, decayAt: 0.003, decay: 0.3, len: 1.5, ratio: 1,
+        guitar: { soft: 0.5, variants: 2, softSpread: 0.04, pluckPos: 0.5, t60: [1.4, 0.7], len: 1.6, rate: 22050, gain: 2.5, late: [0, 0.003], ring: 0.45, mute: 0.1, detune: 0.0006, bend: 0, bendTime: 0.04, tone: 4200, hp: 200, width: 0.6 },
+      },
+      waves: { lanes: [-0.5, 0, 0.5], hp: 100, lpBase: 220, lpPeak: 700, lpQ: 0.3, floor: 0.05, foam: 0, foamBand: [0, 0], rumble: 0.1, rumbleLp: 140, crackle: 0 },
+      space: { ir: 'room', verbBand: [220, 7000], dlyBand: [400, 3000], dlyLpQ: 0.5, pan: 0.7, wow: [0.1, 0.0004], tape: 0, feedbackStart: 0.38 },
+      throw: { feedback: 0.66, send: 1.3 },
+      riser: { from: 240, to: 3000, q: 1 },
+      duck: { attack: 0.012, release: 0.08 },
+    },
+
+    // 漂うアシッド: 聞こえないキック、ゆっくり鳴く 303 をディレイと残響へも送る、厚く暗いパッド
+    float: {
+      version: 'float-mix-0.2',
+      mix: {
+        kick: 0, bass: 0.25, bassDly: 0.45, bassVerb: 0.32,
+        hats: 0.14, hatsVerb: 0.06,
+        perc: 0.14, percDly: 0.4, percVerb: 0.2,
+        stabDry: 0.2, stabDly: 0.45, stabVerb: 0.38,
+        padDry: 0.22, padVerb: 0.5,
+        waves: 0.16, wavesVerb: 0.09,
+        glint: 0.08, glintVerb: 0.45, glintDly: 0.2,
+        riser: 0, riserVerb: 0,
+        verbReturn: 0.5, dlyReturn: 0.65, dlyVerb: 0.3,
+      },
+      kick: { ghost: true }, // 音は出さない。拍ごとの呼吸だけ
+      bass: {
+        tri: 0, triDetune: 0, saw: 0, attack: 0.004, sustain: 1, release: 0.04, drive: 1, lp: 5000, lpQ: 0.5,
+        acid: { wave: 'sawtooth', q: 10, accentQ: 3, cutMin: 150, cutRange: 9, env: 1.8, envAccent: 3, envMax: 4500, decay: 0.14, decayAccent: 0.08, attack: 0.004, release: 0.04, accentAt: 0.85, accentGain: 1.2, glide: 0.09 },
+      },
+      hat: { hp: [6600, 5400], hpQ: 0.6, lp: [9000, 8000], lpQ: 0.5, pk: [8000, 7000], pkQ: 1, pkGain: 1, attack: 0.003, decay: [0.02, 0.05], len: [0.12, 0.35] },
+      perc: { wave: 'triangle', octave: -12, drop: 1.4, dropTime: 0.01, bpMul: 1, bpQ: 1.4, attack: 0.002, decay: 0.03, len: 0.3, noise: 0.2, noiseHz: 1800, noiseQ: 2, noiseDecay: 0.01 },
+      stab: { wave: 'sawtooth', jitter: 3, q: 1.5, cutMin: 280, cutRange: 6, env: [0.9, 0.9], envMax: 2200, envTau: 0.08, attack: 0.012, decayAt: 0.02, tauMin: 0.1, tauRange: 3, hp: 170, tail: 8, spread: 0.008 },
+      pad: { osc: [['sawtooth', -9, 0, 1], ['sawtooth', 9, 0, 1], ['sine', 0, 12, 0.2]], jitter: 3, attack: 2.8, release: 3.2, lp: 800, lpQ: 0.4, lfo: [0.02, 240], breath: [0.06, 0.12], spread: 1.5 },
+      glint: { index: 0.9, indexEnd: 0.06, indexTau: 0.35, attack: 0.015, decayAt: 0.02, decay: 0.9, len: 5, ratio: 2 },
+      waves: { lanes: [-0.6, 0.05, 0.65], hp: 90, lpBase: 220, lpPeak: 560, lpQ: 0.3, floor: 0.1, foam: 0, foamBand: [0, 0], rumble: 0.2, rumbleLp: 150, crackle: 0 },
+      space: { ir: 'hall', verbBand: [170, 5200], dlyBand: [320, 2200], dlyLpQ: 0.5, pan: 0.7, wow: [0.12, 0.0008], tape: 0.7, feedbackStart: 0.56 },
+      throw: { feedback: 0.8, send: 1.8 },
+      riser: { from: 200, to: 2000, q: 1 },
+      duck: { attack: 0.025, release: 0.15 },
+    },
+
+    // ダブ・ギター: ミュートした短い刻み（高い 4 本だけ、すぐ止める）をエコーへ深く送る。太いベース、リムショット
+    skank: {
+      version: 'skank-mix-0.2',
+      mix: {
+        kick: 0.36, bass: 0.24,
+        hats: 0.2, hatsVerb: 0.05,
+        perc: 0.22, percDly: 0.5, percVerb: 0.2,
+        stabDry: 0.2, stabDly: 0.48, stabVerb: 0.18,
+        padDry: 0.06, padVerb: 0.15,
+        waves: 0.05, wavesVerb: 0.03,
+        glint: 0.06, glintVerb: 0.35, glintDly: 0.2,
+        riser: 0, riserVerb: 0,
+        verbReturn: 0.4, dlyReturn: 0.7, dlyVerb: 0.25,
+      },
+      kick: { sweep: 3.2, mid: 1.35, t1: 0.03, t2: 0.11, attack: 0.004, decayAt: 0.03, decay: 0.11, floor: 0.3, lpMin: 110, lpRange: 80, lpQ: 0.85, click: 0.05, clickHz: 2600, clickFrom: 0.4, len: 1 },
+      bass: { tri: 0.35, triDetune: 4, saw: 0.05, attack: 0.008, sustain: 0.8, release: 0.02, drive: 1, lp: 300, lpQ: 0.7 },
+      hat: { hp: [7200, 6000], hpQ: 0.7, lp: [10500, 9500], lpQ: 0.5, pk: [9000, 8000], pkQ: 1.2, pkGain: 1.5, attack: 0.002, decay: [0.018, 0.06], len: [0.12, 0.45] },
+      perc: { wave: 'triangle', octave: -12, drop: 1.5, dropTime: 0.006, bpMul: 1.3, bpQ: 2.2, attack: 0.001, decay: 0.012, len: 0.2, noise: 0.7, noiseHz: 2000, noiseQ: 2.5, noiseDecay: 0.01 },
+      stab: {
+        wave: 'triangle', jitter: 2, q: 1, cutMin: 800, cutRange: 4, env: [1.2, 1], envMax: 4000, envTau: 0.03, attack: 0.002, decayAt: 0.004, tauMin: 0.05, tauRange: 2, hp: 220, tail: 5, spread: 0.004,
+        guitar: {
+          soft: 0.6, variants: 2, softSpread: 0.03, pluckPos: 0.12, t60: [2.5, 1.2], len: 1.2, rate: 22050, gain: 1.3, top: 4,
+          strum: [0.004, 0.009], upStrings: 4, upVel: 0.8, fall: 0.02, late: [-0.003, 0.006],
+          ring: [0.07, 0.2], mute: 0.03, damp: 0.01, detune: 0.001, bend: 0.002, bendTime: 0.03,
+          tone: [1800, 4400], hp: 220, body: [[250, 1, 2], [2600, 1, 2]],
+        },
+      },
+      pad: { osc: [['sawtooth', -8, 0, 1], ['square', 8, -12, 0.3]], jitter: 2, attack: 2, release: 2.4, lp: 700, lpQ: 0.5, lfo: [0.03, 240], breath: [0.07, 0.1], spread: 1.2 },
+      glint: { index: 1.5, indexEnd: 0.1, indexTau: 0.2, attack: 0.006, decayAt: 0.01, decay: 0.5, len: 4, ratio: 3 },
+      waves: { lanes: [-0.6, 0, 0.6], hp: 110, lpBase: 240, lpPeak: 620, lpQ: 0.3, floor: 0.05, foam: 0, foamBand: [0, 0], rumble: 0.15, rumbleLp: 150, crackle: 0.01 },
+      space: { ir: 'plate', verbBand: [220, 6500], dlyBand: [380, 2400], dlyLpQ: 0.6, pan: 0.8, wow: [0.2, 0.0012], tape: 1.2, feedbackStart: 0.56 },
+      throw: { feedback: 0.82, send: 2 },
+      riser: { from: 220, to: 3000, q: 1 },
+      duck: { attack: 0.012, release: 0.09 },
+    },
+
+    // 水辺の箏: 弦の端を弾いた、きらびやかで芯のある撥弦。ときどき弾いたあとに音程をゆっくり揺らす（揺り）。遠い柔らかなキック
+    shore: {
+      version: 'shore-mix-0.2',
+      mix: {
+        kick: 0.34, bass: 0.24,
+        hats: 0.12, hatsVerb: 0.05,
+        perc: 0.14, percDly: 0.4, percVerb: 0.25,
+        stabDry: 0.1, stabDly: 0.25, stabVerb: 0.25,
+        padDry: 0.14, padVerb: 0.36,
+        waves: 0.13, wavesVerb: 0.08,
+        glint: 0.24, glintVerb: 0.5, glintDly: 0.3,
+        riser: 0, riserVerb: 0,
+        verbReturn: 0.48, dlyReturn: 0.6, dlyVerb: 0.3,
+      },
+      kick: { sweep: 2.4, mid: 1.2, t1: 0.04, t2: 0.14, attack: 0.006, decayAt: 0.04, decay: 0.14, floor: 0.35, lpMin: 100, lpRange: 30, lpQ: 0.6, click: 0, clickHz: 0, clickFrom: 1, len: 1.2 },
+      bass: { tri: 0.25, triDetune: 2, saw: 0, attack: 0.02, sustain: 0.8, release: 0.05, drive: 0.4, lp: 220, lpQ: 0.5 },
+      hat: { hp: [6400, 5400], hpQ: 0.6, lp: [9000, 8000], lpQ: 0.5, pk: [7600, 6800], pkQ: 0.9, pkGain: 1, attack: 0.004, decay: [0.02, 0.05], len: [0.12, 0.3] },
+      perc: { wave: 'sine', octave: -12, drop: 1.2, dropTime: 0.01, bpMul: 1, bpQ: 2, attack: 0.002, decay: 0.05, len: 0.4, noise: 0.05, noiseHz: 2400, noiseQ: 2, noiseDecay: 0.006 },
+      stab: { wave: 'sine', jitter: 2, q: 0.8, cutMin: 500, cutRange: 4, env: [1, 1], envMax: 3000, envTau: 0.1, attack: 0.02, decayAt: 0.03, tauMin: 0.2, tauRange: 3, hp: 200, tail: 8, spread: 0.01 },
+      pad: { osc: [['triangle', -6, 0, 1], ['sine', 6, 12, 0.3]], jitter: 2, attack: 3, release: 3.4, lp: 900, lpQ: 0.4, lfo: [0.02, 220], breath: [0.05, 0.12], spread: 1.4 },
+      glint: {
+        index: 1, indexEnd: 0.05, indexTau: 0.1, attack: 0.002, decayAt: 0.004, decay: 0.8, len: 3, ratio: 1,
+        guitar: {
+          soft: 0.5, variants: 2, softSpread: 0.04, pluckPos: 0.09, t60: [3.2, 1.6], len: 3.4, rate: 22050, gain: 3.5, late: [0, 0.01],
+          ring: 2.8, mute: 0.3, detune: 0.0008, bend: 0.004, bendTime: 0.05, tone: 4500, hp: 160, width: 0.6,
+          yuri: { chance: 0.5, delay: 0.25, depth: 0.006, period: 0.22, count: 5 }, // 揺り: 弾いたあと、弦を押して音程をゆっくり揺らす
+        },
+      },
+      waves: { lanes: [-0.6, 0, 0.6], hp: 120, lpBase: 260, lpPeak: 900, lpQ: 0.3, floor: 0.06, foam: 0, foamBand: [0, 0], rumble: 0.08, rumbleLp: 140, crackle: 0 },
+      space: { ir: 'hall', verbBand: [200, 7000], dlyBand: [360, 3200], dlyLpQ: 0.5, pan: 0.75, wow: [0.1, 0.0005], tape: 0, feedbackStart: 0.48 },
+      throw: { feedback: 0.7, send: 1.4 },
+      riser: { from: 220, to: 3000, q: 1 },
+      duck: { attack: 0.02, release: 0.12 },
+    },
   };
 
   U.patches = Object.freeze({ PATCHES: deepFreeze(PATCHES), IMPULSES: deepFreeze(IMPULSES) });

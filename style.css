@@ -55,6 +55,10 @@
 :root[data-world="click"] { --night: #0a0b06; --haze: #1c1f10; --line-rgb: 228, 234, 196; --glow-rgb: 170, 190, 80; }
 :root[data-world="sunset"] { --night: #140a14; --haze: #3a1630; --line-rgb: 255, 214, 200; --glow-rgb: 250, 110, 110; }
 :root[data-world="acid"]  { --night: #050a04; --haze: #0f2308; --line-rgb: 214, 255, 170; --glow-rgb: 140, 255, 60; }
+:root[data-world="phase"] { --night: #0c0b08; --haze: #242018; --line-rgb: 236, 228, 206; --glow-rgb: 200, 176, 120; }
+:root[data-world="float"] { --night: #120810; --haze: #2e1428; --line-rgb: 255, 210, 236; --glow-rgb: 255, 110, 200; }
+:root[data-world="skank"] { --night: #0c0a04; --haze: #2a2008; --line-rgb: 250, 232, 170; --glow-rgb: 230, 190, 60; }
+:root[data-world="shore"] { --night: #0a0d0c; --haze: #1e2724; --line-rgb: 226, 240, 232; --glow-rgb: 150, 200, 180; }
 
 html {
   height: 100%;
@@ -387,6 +391,15 @@ kbd {
   justify-content: center;
   gap: 8px;
   margin-top: 22px;
+}
+
+/* 広い画面では 10 個ずつ 2 段に */
+@media (min-width: 820px) {
+  .worlds {
+    display: grid;
+    grid-template-columns: repeat(10, auto);
+    justify-content: center;
+  }
 }
 
 .worlds button {

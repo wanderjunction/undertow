@@ -246,10 +246,12 @@ test('ナイロンギター: 弦は音程どおりに鳴り、表の 16 分は�
         voices._stab({ step, notes, vel: 0.9, bright: 0.5, decay: 0.5 }, t);
         return ctx.sources.slice(before).sort((a, b) => a.startAt - b.startAt);
       };
+      const reach = Math.min(notes.length, PATCHES[world].stab.guitar.top || notes.length); // top: 高い弦だけで刻む
       const down = strum(2, 1);
-      assert.equal(down.length, notes.length, `${world}: a downstroke plays every string`);
+      assert.equal(down.length, reach, `${world}: a downstroke plays every string it reaches`);
       down.forEach((s, i) => {
-        assert.ok(Math.abs(midiOf(s) - notes[i]) * 100 < 5, `${world}: string ${i} is ${((midiOf(s) - notes[i]) * 100).toFixed(1)} cents off`);
+        const want = notes[notes.length - reach + i];
+        assert.ok(Math.abs(midiOf(s) - want) * 100 < 5, `${world}: string ${i} is ${((midiOf(s) - want) * 100).toFixed(1)} cents off`);
       });
       const up = strum(3, 2);
       assert.ok(up.length >= 3 && up.length < notes.length, `${world}: an upstroke catches only the high strings (${up.length})`);
@@ -288,7 +290,7 @@ test('ナイロンギター: 1 本の弦は 1 音だけ。弾き直すと前の�
     voices._stab({ step: 0, notes, vel: 0.9, bright: 0.5, decay: 1 }, 1);
     const firstAmps = ctx.params.slice(p0).filter((p) => p.label === 'gain.gain' && p.events.length === 2);
     const firstSources = ctx.sources.slice(s0);
-    assert.equal(firstAmps.length, notes.length);
+    assert.equal(firstAmps.length, Math.min(notes.length, PATCHES[world].stab.guitar.top || notes.length));
     const s1 = ctx.sources.length;
     voices._stab({ step: 4, notes, vel: 0.9, bright: 0.5, decay: 1 }, 1.5);
     const second = ctx.sources.slice(s1);
@@ -299,6 +301,58 @@ test('ナイロンギター: 1 本の弦は 1 音だけ。弾き直すと前の�
       assert.ok(last.time >= 1.49 && last.time < 1.65, `${world}: the old note stops when the string is struck again (${last.time})`);
     }
     firstSources.forEach((s, i) => assert.notEqual(s.buffer, second[i].buffer, `${world}: string ${i} repeats the same waveform`));
+  }
+});
+
+test('ベースの送り: bassDly / bassVerb を持つ WORLD だけ、ベースの出口からディレイと残響へ送る', () => {
+  const orig = U.Voices.prototype._send;
+  try {
+    for (const world of IDS) {
+      const sends = [];
+      U.Voices.prototype._send = function (from, amount, to) {
+        sends.push({ from, amount, to });
+        return orig.call(this, from, amount, to);
+      };
+      const voices = new U.Voices(new FakeContext(), new U.core.Director({ seed: 1, world }).identity);
+      const M = PATCHES[world].mix;
+      const bass = sends.filter((s) => s.from.kind === 'biquad'); // ほかの送りはどれもバス（gain）から出る
+      const want = [];
+      if (M.bassDly) want.push([voices.dly, M.bassDly]);
+      if (M.bassVerb) want.push([voices.verb, M.bassVerb]);
+      assert.equal(bass.length, want.length, `${world}: bass sends ${bass.length}`);
+      for (const [to, amount] of want) assert.ok(bass.some((s) => s.to === to && s.amount === amount), `${world}: bass send ${amount}`);
+    }
+  } finally {
+    U.Voices.prototype._send = orig;
+  }
+});
+
+test('揺り（箏）: ときどき弾いたあとに音程をゆっくり上下させ、元の高さに戻す（中心は動かさない）', () => {
+  for (const world of IDS.filter((w) => PATCHES[w].glint.guitar && PATCHES[w].glint.guitar.yuri)) {
+    const Y = PATCHES[world].glint.guitar.yuri;
+    const ctx = new FakeContext();
+    const voices = new U.Voices(ctx, new U.core.Director({ seed: 1, world }).identity);
+    let swayed = 0;
+    let still = 0;
+    for (let k = 0; k < 16; k++) {
+      const before = ctx.sources.length;
+      voices._glint({ step: 0, note: 69, vel: 0.8, pan: 0 }, 1 + k * 4);
+      const ev = ctx.sources[before].playbackRate.events;
+      const base = ev[1].value; // 弾いた瞬間の高さから落ち着いた、元の高さ
+      if (ev.length === 2) {
+        still++;
+        continue;
+      }
+      swayed++;
+      const sway = ev.slice(2, -1);
+      assert.equal(sway.length, Y.count);
+      sway.forEach((e, i) => {
+        assert.ok(Math.abs(e.value / base - 1) <= Y.depth + 1e-9, `${world}: sway too wide ${e.value / base}`);
+        if (i > 0) assert.ok((e.value - base) * (sway[i - 1].value - base) < 0, `${world}: sway goes up and down`);
+      });
+      assert.ok(Math.abs(ev[ev.length - 1].value - base) < 1e-12, `${world}: back to the original pitch`);
+    }
+    assert.ok(swayed > 0 && still > 0, `${world}: swayed ${swayed}, still ${still}`);
   }
 });
 
@@ -326,6 +380,7 @@ test('音色は WORLD ごとに一組そろっていて、WORLD をまたいで�
   for (const role of ROLES) {
     for (let i = 0; i < IDS.length; i++) {
       for (let j = i + 1; j < IDS.length; j++) {
+        if (role === 'kick' && PATCHES[IDS[i]].kick.ghost && PATCHES[IDS[j]].kick.ghost) continue; // 音を出さないキックは同じでいい
         const a = JSON.stringify(PATCHES[IDS[i]][role]);
         const b = JSON.stringify(PATCHES[IDS[j]][role]);
         assert.notEqual(a, b, `${role}: ${IDS[i]} と ${IDS[j]} が同じ音色`);

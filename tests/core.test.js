@@ -150,7 +150,9 @@ test('アシッド: 滑る音は同じ小節の前の音から入り、フィル
 });
 
 test('ギターの曲調（sunset）: 和音は 1 小節に 1 回まで（余韻を聴かせる）', () => {
-  for (const world of IDS.filter((w) => WORLDS[w].voicing === 'guitar')) {
+  const letRing = (w) => Object.values(WORLDS[w].sections).every((sec) => sec.stabPool === 'letRing');
+  assert.ok(IDS.some(letRing));
+  for (const world of IDS.filter(letRing)) {
     for (const seed of SEEDS.slice(0, 6)) {
       let strums = 0;
       for (const { plan } of run(seed, 400, world).bars) {

@@ -357,7 +357,11 @@
       const shaper = ctx.createWaveShaper();
       shaper.curve = tanhCurve();
       shaper.oversample = '2x';
-      chain(this.bassBus, this._gain(P.bass.drive), shaper, this._gain(M.bass), this._filter('lowpass', P.bass.lp, P.bass.lpQ), this.mix);
+      const bassOut = this._filter('lowpass', P.bass.lp, P.bass.lpQ);
+      chain(this.bassBus, this._gain(P.bass.drive), shaper, this._gain(M.bass), bassOut, this.mix);
+      // ベースもディレイと残響へ送る WORLD（float: 漂うアシッド）
+      if (M.bassDly) this._send(bassOut, M.bassDly, this.dly);
+      if (M.bassVerb) this._send(bassOut, M.bassVerb, this.verb);
 
       this.hatBus = this._gain(1);
       this._send(this.hatBus, M.hats, this.music);
@@ -751,7 +755,8 @@
       const ctx = this.ctx;
       const r = this.r;
       const up = Math.round(e.step) % 2 === 1;
-      const strings = e.notes.map((n, i) => ({ note: n, string: 6 - e.notes.length + i }));
+      const all = e.notes.map((n, i) => ({ note: n, string: 6 - e.notes.length + i }));
+      const strings = G.top ? all.slice(-G.top) : all; // top: 高い弦だけで刻む（skank）
       const hit = up ? strings.slice(-Math.min(strings.length, G.upStrings + (r.chance(0.5) ? 1 : 0))).reverse() : strings;
       const gap = r.range(G.strum[0], G.strum[1]) * (1.25 - 0.5 * e.vel) * (up ? 0.8 : 1); // 強く弾くほど速く振り抜く
       const ring = G.ring[0] * Math.pow(G.ring[1] / G.ring[0], e.decay);
@@ -800,6 +805,14 @@
       const rate = 1 + r.range(-N.detune, N.detune);
       src.playbackRate.setValueAtTime(rate * (1 + N.bend * e.vel), at);
       src.playbackRate.setTargetAtTime(rate, at + 0.004, N.bendTime);
+      if (N.yuri && r.chance(N.yuri.chance)) {
+        // 揺り（箏）: 弾いたあと、弦を押して音程をゆっくり上下させ、元に戻す
+        const Y = N.yuri;
+        for (let k = 0; k < Y.count; k++) {
+          src.playbackRate.setTargetAtTime(rate * (1 + (k % 2 ? -1 : 1) * Y.depth), at + Y.delay + k * Y.period, Y.period / 3);
+        }
+        src.playbackRate.setTargetAtTime(rate, at + Y.delay + Y.count * Y.period, Y.period / 2);
+      }
       const amp = ctx.createGain();
       amp.gain.setValueAtTime(N.gain * e.vel, at);
       amp.gain.setTargetAtTime(0, at + N.ring, N.mute);

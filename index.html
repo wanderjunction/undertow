@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400&amp;family=Jost:wght@300;400&amp;display=swap">
 <!-- ?v= は版ごとに上げる（ブラウザが古い CSS / JS を覚えたまま、新しいページだけ読むことがないように） -->
-<link rel="stylesheet" href="style.css?v=1.11">
+<link rel="stylesheet" href="style.css?v=1.12">
 </head>
 <body>
 <canvas id="sea" aria-hidden="true"></canvas>
@@ -48,7 +48,7 @@
   <p class="hint" lang="en"><kbd>space</kbd> play / stop</p>
 </footer>
 
-<p class="version" lang="en">v1.11</p>
+<p class="version" lang="en">v1.12</p>
 
 <button id="about-open" class="about-open" type="button" lang="en" aria-haspopup="dialog">about</button>
 
@@ -93,6 +93,10 @@
         <dt lang="en">click</dt><dd>マイクロハウス。プチプチした細かなクリックが主役で、軽く跳ねる。小さく乾いた和音と、短く弾むベース</dd>
         <dt lang="en">sunset</dt><dd>夕暮れ（バレアリック）。暖かい長調の中で、ナイロンギターがゆっくり和音を鳴らして余韻を残し、ときどき単音のフレーズを弾く。コンガとシェイカー</dd>
         <dt lang="en">acid</dt><dd>ミニマル・アシッド。TB-303 風のベースが一音ごとに鳴き、ときどき音程が滑る。フィルターのつまみがゆっくり回っていく</dd>
+        <dt lang="en">phase</dt><dd>ライヒ風。マリンバのような音が途切れなく流れ、少しずつずれながら模様を変えていく</dd>
+        <dt lang="en">float</dt><dd>漂うアシッド。キックは聞こえないまま、303 がゆっくり鳴いて深いエコーに溶けていく</dd>
+        <dt lang="en">skank</dt><dd>ダブ・ギター。短く刻んだギターを、深いエコーへ投げ込む</dd>
+        <dt lang="en">shore</dt><dd>水辺の箏。弾いたあとに音程がゆっくり揺れる単音が、長いエコーの中に消えていく</dd>
       </dl>
       <p class="about-note">テンポは目安の範囲です。再生のたびに、その範囲の中で決まります。</p>
     </div>
@@ -131,6 +135,10 @@
         <dt>click</dt><dd>Microhouse. Tiny crackling clicks take the lead with a light bounce, over small dry chords and a short, springy bass</dd>
         <dt>sunset</dt><dd>Balearic sunset. Over warm major chords, a nylon guitar lets slow strums ring out and now and then plays a few single notes, with congas and shakers</dd>
         <dt>acid</dt><dd>Minimal acid. A TB-303-style bassline squelches on every note and sometimes slides between them, as the filter knob slowly turns</dd>
+        <dt>phase</dt><dd>Reich-style phasing. Marimba-like notes flow without a break, slowly shifting their pattern</dd>
+        <dt>float</dt><dd>Floating acid. The kick is never heard as a 303 squelches slowly into deep echoes</dd>
+        <dt>skank</dt><dd>Dub guitar. Short, muted guitar chops thrown into deep echoes</dd>
+        <dt>shore</dt><dd>Koto by the water. Single notes waver after each pluck and fade into long echoes</dd>
       </dl>
       <p class="about-note">Tempos are ranges. Each play picks a tempo within the range.</p>
     </div>
@@ -139,14 +147,14 @@
 
 <p id="status" class="visually-hidden" role="status" aria-live="polite"></p>
 
-<script src="js/core/util.js?v=1.11"></script>
-<script src="js/core/rng.js?v=1.11"></script>
-<script src="js/core/content.js?v=1.11"></script>
-<script src="js/core/worlds.js?v=1.11"></script>
-<script src="js/core/director.js?v=1.11"></script>
-<script src="js/audio/patches.js?v=1.11"></script>
-<script src="js/audio/voices.js?v=1.11"></script>
-<script src="js/audio/transport.js?v=1.11"></script>
-<script src="js/app.js?v=1.11"></script>
+<script src="js/core/util.js?v=1.12"></script>
+<script src="js/core/rng.js?v=1.12"></script>
+<script src="js/core/content.js?v=1.12"></script>
+<script src="js/core/worlds.js?v=1.12"></script>
+<script src="js/core/director.js?v=1.12"></script>
+<script src="js/audio/patches.js?v=1.12"></script>
+<script src="js/audio/voices.js?v=1.12"></script>
+<script src="js/audio/transport.js?v=1.12"></script>
+<script src="js/app.js?v=1.12"></script>
 </body>
 </html>
