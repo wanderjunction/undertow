@@ -743,9 +743,14 @@
       } else {
         o.frequency.setValueAtTime(hz, t);
       }
-      const cut = A.cutMin * Math.pow(A.cutRange, e.cut === undefined ? 0.5 : e.cut);
-      const lp = this._filter('lowpass', cut, A.q + (accent ? A.accentQ : 0));
-      lp.frequency.setValueAtTime(Math.min(cut * (accent ? A.envAccent : A.env), A.envMax), t);
+      const knob = e.cut === undefined ? 0.5 : e.cut;
+      const cut = A.cutMin * Math.pow(A.cutRange, knob);
+      // qLow（acid）: 共鳴もつまみに連動する（閉じているときは丸く、開くほど鳴く）
+      const q = (A.qLow ? A.q * (A.qLow + (1 - A.qLow) * knob) : A.q) + (accent ? A.accentQ : 0);
+      const lp = this._filter('lowpass', cut, q);
+      // 滑る音はゲートが開いたまま（303 のスライド）: フィルターを弾き直さず、音程だけが滑る
+      const env = e.from !== undefined && A.slideEnv ? A.slideEnv : accent ? A.envAccent : A.env;
+      lp.frequency.setValueAtTime(Math.min(cut * env, A.envMax), t);
       lp.frequency.setTargetAtTime(cut, t + 0.002, accent ? A.decayAccent : A.decay);
       const amp = ctx.createGain();
       amp.gain.setValueAtTime(0, t);

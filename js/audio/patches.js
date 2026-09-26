@@ -508,7 +508,7 @@
 
     // ミニマル・アシッド: 鋸歯状波 1 本を強い共鳴のローパスで一音ごとに開いて閉じる（TB-303 風）。乾いたキック、細いハット、暗いパッド
     acid: {
-      version: 'acid-mix-0.1',
+      version: 'acid-mix-0.2', // 0.2 でスライドを長く、つまみに 16 小節の大きな呼吸、共鳴の連動、アクセントを誇張
       mix: {
         kick: 0.42, bass: 0.2,
         hats: 0.24, hatsVerb: 0.05,
@@ -524,7 +524,7 @@
       // acid: 一音ごとのフィルター。q は共鳴（dB）、cut は Director が送る 0..1 のつまみ、アクセントは vel が accentAt を超えた音
       bass: {
         tri: 0, triDetune: 0, saw: 0, attack: 0.003, sustain: 1, release: 0.02, drive: 1.3, lp: 6000, lpQ: 0.5,
-        acid: { wave: 'sawtooth', q: 14, accentQ: 4, cutMin: 170, cutRange: 12, env: 2.2, envAccent: 4, envMax: 7000, decay: 0.09, decayAccent: 0.05, attack: 0.003, release: 0.02, accentAt: 0.85, accentGain: 1.25, glide: 0.06 },
+        acid: { wave: 'sawtooth', q: 16, qLow: 0.45, accentQ: 6, cutMin: 170, cutRange: 12, env: 2.2, envAccent: 6, slideEnv: 1.15, envMax: 8000, decay: 0.09, decayAccent: 0.05, attack: 0.003, release: 0.02, accentAt: 0.85, accentGain: 1.5, glide: 0.11 },
       },
       hat: { hp: [7800, 6400], hpQ: 0.7, lp: [11500, 10000], lpQ: 0.5, pk: [9800, 8600], pkQ: 1.3, pkGain: 1.5, attack: 0.0015, decay: [0.012, 0.045], len: [0.1, 0.4] },
       perc: { wave: 'triangle', octave: -12, drop: 1.6, dropTime: 0.006, bpMul: 1.2, bpQ: 2.5, attack: 0.001, decay: 0.012, len: 0.15, noise: 0.6, noiseHz: 1600, noiseQ: 1.8, noiseDecay: 0.012 },

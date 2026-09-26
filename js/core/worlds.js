@@ -1076,7 +1076,7 @@
       riser: true,
       percSlots: [4, 12, 7, 15],
       percHits: [1, 2],
-      acid: { tweak: [10, 18, 32] }, // フィルターのつまみが回る周期（小節）
+      acid: { tweak: [10, 18, 32], breath: 16 }, // フィルターのつまみが回る周期（小節）
       waves: { periods: [6, 8, 10], chance: 0.4, rise: [40, 64], fall: [64, 96], peak: [0.2, 0.45] },
       glint: { starts: [0, 6, 10], gaps: [4, 6], range: [74, 91] },
       sections: {

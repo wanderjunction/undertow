@@ -575,7 +575,13 @@
         if (p < 0.02) continue;
         const e = { voice: 'bass', step: swing(st), note: s.chord.bass + (typeof oct === 'string' ? chordTone(s.chord, oct) : oct), vel: round(v * p * h.range(0.9, 1) * (W.accent ? W.accent[st] : 1)), len };
         if (fx === 'g' && prevBass !== null) e.from = prevBass; // 前の音から滑って入る
-        if (this._acid) e.cut = round(clamp(0.5 + 0.38 * this._acid(at(st)) + 0.3 * (rampAt(s.open, at(st)) - 1), 0.05, 0.95));
+        if (this._acid) {
+          // つまみ = 大きな呼吸 + 小さな揺れ。W.acid.breath（小節）かけて、丸いベース → だんだん開いて正体を現す → ピークで叫ぶ → また閉じる
+          const B = W.acid.breath;
+          const hump = B ? Math.pow(0.5 - 0.5 * Math.cos((2 * Math.PI * at(st)) / B), 1.5) : 0.5;
+          const sway = B ? 0.16 : 0.38;
+          e.cut = round(clamp(0.5 + (B ? 0.75 * (hump - 0.45) : 0) + sway * this._acid(at(st)) + 0.3 * (rampAt(s.open, at(st)) - 1), 0.05, 0.95));
+        }
         prevBass = e.note;
         events.push(e);
       }

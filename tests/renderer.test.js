@@ -237,6 +237,25 @@ function pitchOf(buffer) {
   return sr / (bestLag + shift);
 }
 
+test('アシッドのスライドと共鳴（acid）: 滑る音はフィルターを弾き直さず、共鳴はつまみが開くほど強い', () => {
+  for (const world of IDS.filter((w) => PATCHES[w].bass.acid && PATCHES[w].bass.acid.slideEnv)) {
+    const A = PATCHES[world].bass.acid;
+    const ctx = new FakeContext();
+    const voices = new U.Voices(ctx, new U.core.Director({ seed: 1, world }).identity);
+    const probe = (e) => {
+      const p0 = ctx.params.length;
+      voices._bass(e, 1);
+      const ps = ctx.params.slice(p0);
+      return { f: ps.find((p) => p.label === 'biquad.frequency' && p.events.length), q: ps.find((p) => p.label === 'biquad.Q') };
+    };
+    const plain = probe({ step: 2, note: 40, vel: 0.7, len: 0.5, cut: 0.5 });
+    const slide = probe({ step: 3, note: 47, vel: 0.7, len: 0.5, cut: 0.5, from: 40 });
+    assert.ok(slide.f.events[0].value < plain.f.events[0].value, `${world}: a slide keeps the gate open`);
+    assert.ok(probe({ step: 2, note: 40, vel: 0.7, len: 0.5, cut: 0.9 }).q.value > probe({ step: 2, note: 40, vel: 0.7, len: 0.5, cut: 0.1 }).q.value, `${world}: resonance follows the knob`);
+    assert.ok(A.glide >= 0.1, 'the slide is long enough to hear');
+  }
+});
+
 test('ナイロンギター: 弦は音程どおりに鳴り、表の 16 分はダウン（全部の弦）、裏の 16 分はアップ（高い弦の数本）', () => {
   const guitars = IDS.filter((w) => PATCHES[w].stab.guitar);
   assert.ok(guitars.length > 0);

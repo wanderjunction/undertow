@@ -298,6 +298,23 @@ test('スタブの置き場所のずれ（motor）と、和音の中の順位で
   assert.ok(shifted > 100 && ranked > 100, `shifted ${shifted}, ranked ${ranked}`);
 });
 
+test('アシッドの呼吸（acid）: W.acid.breath の WORLD は、つまみが breath 小節かけて大きく開いて閉じる', () => {
+  for (const world of IDS.filter((w) => WORLDS[w].acid && WORLDS[w].acid.breath)) {
+    const B = WORLDS[world].acid.breath;
+    for (const seed of SEEDS.slice(0, 4)) {
+      const cuts = [];
+      for (const { plan, state } of run(seed, 160, world).bars) {
+        if (state.section.type !== 'groove') continue;
+        for (const e of plan.events) if (e.voice === 'bass') cuts.push([plan.bar % B, e.cut]);
+      }
+      const avg = (f) => { const v = cuts.filter(([b]) => f(b)).map(([, c]) => c); return v.reduce((x, y) => x + y, 0) / v.length; };
+      const low = avg((b) => b < 2 || b >= B - 2);
+      const peak = avg((b) => Math.abs(b - B / 2) < 2);
+      assert.ok(peak - low > 0.35, `${world}: the knob breathes (${low.toFixed(2)} → ${peak.toFixed(2)})`);
+    }
+  }
+});
+
 test('状態の書き手は Director だけ: 状態もプランも凍結されている', () => {
   const d = new Director({ seed: 7 });
   const plan = d.nextBar();
