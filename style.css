@@ -470,6 +470,23 @@ kbd {
   color: var(--ink);
 }
 
+/* PC の広い画面では隅で見落としやすいので、曲調ボタンと同じ枠付きのボタンにして少し大きく明るくする */
+@media (min-width: 820px) {
+  .about-open {
+    top: calc(env(safe-area-inset-top, 0px) + 16px);
+    left: 18px;
+    padding: 6px 14px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  .about-open:hover {
+    border-color: var(--mist);
+  }
+}
+
 .about-open:focus-visible,
 .about-close:focus-visible {
   outline: 1px solid var(--accent);

@@ -288,6 +288,7 @@
     fog: {
       version: 'fog-mix-0.4',
       mix: {
+        trim: 1.2, // 全体を約 1.6 dB 上げる（-16.7 dB と、いちばん静かだった。持続音が厚く、これ以上はリミッタがオルガンの膨らみを潰す）
         kick: 0, bass: 0.3,
         hats: 0.32, hatsVerb: 0.13,
         perc: 0.22, percDly: 0.56, percVerb: 0.35,
@@ -543,6 +544,7 @@
     shore: {
       version: 'shore-mix-0.2',
       mix: {
+        trim: 1.33, // 全体を約 2.5 dB 上げる（-16.4 dB と静かだった）。音はそのまま
         kick: 0.34, bass: 0.24,
         hats: 0.12, hatsVerb: 0.05,
         perc: 0.14, percDly: 0.4, percVerb: 0.25,
