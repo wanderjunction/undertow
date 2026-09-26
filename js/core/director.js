@@ -17,7 +17,7 @@
   const { derive, formatSeed } = U.rng;
   const { CONFIRMED, CALIBRATION: CAL, CONTENT } = U.content;
   const { STABS, BASS, HATS, OPS, CHORDS, PROGRESSIONS, NOTE_NAMES, GUITAR } = CONTENT;
-  const { WORLDS, IDS: WORLD_IDS } = U.worlds;
+  const { WORLDS, VISIBLE: WORLD_IDS } = U.worlds; // ランダムに選ぶのは、非表示でない WORLD だけ
 
   const STEPS = CONFIRMED.STEPS_PER_BAR;
   const PARTS = CONFIRMED.PARTS;
@@ -158,12 +158,20 @@
     return best;
   }
 
+  // ベースの型の音程を「和音の中の順位」で書いたもの（'r0' 根音、'r2' 根音から数えて 3 つ目の和音の音。オクターブの中へ畳む）。
+  // 和音が変わっても、同じ型のまま和音の音だけを弾く（motor の回るベース）
+  function chordTone(chord, spec) {
+    const iv = chord.pad.map((n) => n - chord.pad[0]);
+    return mod(iv[Math.min(Number(spec.slice(1)), iv.length - 1)], 12);
+  }
+
   function voiceChord(keyPc, off, type, glintRange, voicing) {
     const iv = CHORDS[type];
     const pc = mod(keyPc + off, 12);
     const root = 45 + mod(pc - 45, 12); // A2..G♯3
     const close = iv.map((i) => root + i);
-    const stab = (voicing === 'guitar' && guitarVoicing(pc, iv)) || close;
+    // rootless（motor）: スタブは根音を抜いて上の音だけで鳴らし、根音はベースに任せる（浮いた響き）
+    const stab = (voicing === 'guitar' && guitarVoicing(pc, iv)) || (voicing === 'rootless' ? close.slice(1) : close);
     const tones = iv.map((i) => mod(pc + i, 12));
     const glint = [];
     for (let m = glintRange[0]; m <= glintRange[1]; m++) if (tones.includes(m % 12)) glint.push(m);
@@ -186,6 +194,7 @@
   }
 
   function percHits(r, W) {
+    if (W.percLoop) return W.percLoop.map(([pos, v]) => [pos, v]); // 決まった形で繰り返す（motor のリム）
     const hits = new Map();
     const n = r.int(W.percHits[0], W.percHits[1]);
     for (let i = 0; i < n; i++) hits.set(r.int(0, 1) * STEPS + r.pick(W.percSlots), round(r.range(0.5, 1), 100));
@@ -564,7 +573,7 @@
       if (!W.poly) for (const [st, v, len, oct, fx] of BASS[P.bass]) {
         const p = rampAt(L.bass, at(st));
         if (p < 0.02) continue;
-        const e = { voice: 'bass', step: swing(st), note: s.chord.bass + oct, vel: round(v * p * h.range(0.9, 1)), len };
+        const e = { voice: 'bass', step: swing(st), note: s.chord.bass + (typeof oct === 'string' ? chordTone(s.chord, oct) : oct), vel: round(v * p * h.range(0.9, 1) * (W.accent ? W.accent[st] : 1)), len };
         if (fx === 'g' && prevBass !== null) e.from = prevBass; // 前の音から滑って入る
         if (this._acid) e.cut = round(clamp(0.5 + 0.38 * this._acid(at(st)) + 0.3 * (rampAt(s.open, at(st)) - 1), 0.05, 0.95));
         prevBass = e.note;
@@ -575,12 +584,13 @@
         if (!e) return;
         const p = rampAt(L.hats, at(st));
         if (p < 0.02 || !h.chance(clamp(e[2] + P.hats.density * e[3], 0, 1))) return;
+        // W.machine（motor）: ドラムマシンのように、強さもタイミングも揺らさない（位置もいつも同じ）
         events.push({
           voice: 'hat',
-          step: round(swing(st) + h.range(0, 0.02)),
-          vel: round(e[0] * p * h.range(0.8, 1)),
+          step: W.machine ? swing(st) : round(swing(st) + h.range(0, 0.02)),
+          vel: round(e[0] * p * (W.machine ? 1 : h.range(0.8, 1)) * (W.accent ? W.accent[st] : 1)),
           open: e[1] === 1,
-          pan: round(h.range(-0.3, 0.3)),
+          pan: W.machine ? 0.15 : round(h.range(-0.3, 0.3)),
         });
       });
 
@@ -589,7 +599,19 @@
         const st = pos % STEPS;
         const p = rampAt(L.perc, at(st));
         if (p < 0.02) continue;
-        events.push({ voice: 'perc', step: swing(st), note: id.percNote, vel: round(v * p), pan: round(h.range(-0.5, 0.5)) });
+        events.push({ voice: 'perc', step: swing(st), note: id.percNote, vel: round(v * p * (W.accent ? W.accent[st] : 1)), pan: round(h.range(-0.5, 0.5)) });
+      }
+
+      // ライド（motor）: W.ride の位置に毎小節。ハットの強さに従い、揺らさない
+      if (W.ride && !W.poly) for (const [st, v] of W.ride) {
+        const p = rampAt(L.hats, at(st));
+        if (p >= 0.02) events.push({ voice: 'hat', ride: true, step: swing(st), vel: round(v * p), open: false, pan: -0.2 });
+      }
+
+      // 手拍子（motor）: W.claps の位置に毎小節。パーカッションの強さに従い、ドラムマシンらしく強さを揺らさない（乱数を使わない）
+      if (W.claps && !W.poly) for (const [st, v] of W.claps) {
+        const p = rampAt(L.perc, at(st));
+        if (p >= 0.02) events.push({ voice: 'clap', step: swing(st), vel: round(v * p) });
       }
 
       // スタブ。打数とフィードバックが多いほど減衰を短くする（長い減衰 × 高密度を同時に起こさない）
@@ -603,7 +625,10 @@
       const bright = clamp(0.5 + 0.32 * this._drift.bright(bar) + 0.45 * (rampAt(s.open, bar) - 1), 0.05, 0.95);
       const throwHere = bar % 8 === 7 && h.chance(W.throwChance[sec.type] || 0);
       let lastStab = null;
-      for (const st of bar % 2 ? P.stabs.b : P.stabs.a) {
+      // W.stabShift（motor）: 4 小節のうち決まった小節だけ、同じ形のまま横へずらす（和声は動かないのに、置き場所で曲が動く）
+      const shift = W.stabShift ? W.stabShift[bar % W.stabShift.length] : 0;
+      const stabSteps = (bar % 2 ? P.stabs.b : P.stabs.a).map((x) => (x + shift) % STEPS).sort((x, y) => x - y);
+      for (const st of stabSteps) {
         const p = rampAt(L.stabs, at(st));
         if (p < 0.02 || !h.chance(0.92)) continue;
         lastStab = {
@@ -611,7 +636,8 @@
           step: swing(st),
           notes: s.chord.stab,
           vel: round(p * h.range(0.78, 1)),
-          bright: round(bright),
+          // W.sweep（motor）: フィルターのつまみを数小節かけて回すように、明るさを小節をまたいでゆっくり上下させる（乱数は使わない）
+          bright: round(W.sweep ? clamp(bright + W.sweep.depth * Math.sin((2 * Math.PI * (bar + st / STEPS)) / W.sweep.bars), 0.05, 0.95) : bright),
           decay: round(decay),
         };
         events.push(lastStab);
@@ -622,7 +648,18 @@
       controls.push({ kind: 'swell', step: 0, value: round(this._swell(bar)) });
 
       const gl = P.glint * rampAt(L.glints, bar);
-      if (!W.poly && gl > 0.02 && h.chance(0.12 + 0.5 * gl)) {
+      // W.riff（motor）: 短いフレーズ（リフ）を riff.bars 小節ごとに繰り返す。形は曲ごとに一つ（seed で決まる）。
+      // 音は和音の高い方から数えた順位で持つので、和音が変わると同じ形のまま音だけ移る
+      if (W.riff) {
+        const shape = W.riff.shapes[id.seed % W.riff.shapes.length];
+        const pool = s.chord.glint;
+        const lv = rampAt(L.glints, bar) * W.riff.level;
+        if (lv > 0.02) for (const [pos, rank, v] of shape) {
+          if (Math.floor(pos / STEPS) !== bar % (W.riff.bars || 2)) continue;
+          const st = pos % STEPS;
+          events.push({ voice: 'glint', step: swing(st), note: pool[Math.max(0, pool.length - 1 - rank)], vel: round(clamp(v * lv, 0, 1)), pan: round(0.3 * Math.sin(pos)) });
+        }
+      } else if (!W.poly && gl > 0.02 && h.chance(0.12 + 0.5 * gl)) {
         const pool = s.chord.glint;
         let idx = h.int(Math.floor(pool.length / 2), pool.length - 1);
         let st = h.pick(W.glint.starts);

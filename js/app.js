@@ -333,7 +333,7 @@
     changeTide();
   }
   shuffle.addEventListener('click', () => pick(null, null));
-  for (const id of U.worlds.IDS) {
+  for (const id of U.worlds.VISIBLE) { // 非表示の WORLD は URL の #名前 でだけ鳴らせる
     const b = document.createElement('button');
     b.type = 'button';
     b.dataset.world = id;

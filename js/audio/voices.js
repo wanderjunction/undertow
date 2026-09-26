@@ -6,7 +6,7 @@
  */
 (function (U) {
   'use strict';
-  const { clamp, mtof } = U.util;
+  const { clamp, mtof, mod } = U.util;
   const { derive } = U.rng;
   const { PATCHES, IMPULSES } = U.patches;
 
@@ -17,6 +17,33 @@
   //   tone  いちばん遠いときに音楽バスのローパスが何オクターブ下がるか（近いときは開ききる）
   //   verb  残響の返りの増減（遠いほど多い）   level  音楽バスの音量の増減（近いほど大きい）
   const SWELL = Object.freeze({ open: 18000, tone: 2.5, verb: 0.3, level: 0.22 });
+
+  // 純正な音程（半音の数 mod 12 → [周波数の比, 合わせやすさ]）。合わせやすさは小さいほど先に合わせる:
+  // オクターブ、完全 5 度・4 度、長 3 度・短 6 度、短 3 度・長 6 度、長 2 度・短 7 度、半音・長 7 度、三全音
+  const PURE = Object.freeze(
+    [[1, 0], [16 / 15, 5], [9 / 8, 4], [6 / 5, 3], [5 / 4, 2], [4 / 3, 1], [45 / 32, 6], [3 / 2, 1], [8 / 5, 2], [5 / 3, 3], [16 / 9, 4], [15 / 8, 5]]
+      .map(([ratio, rank], semis) => Object.freeze([1200 * Math.log2(ratio) - 100 * semis, rank])), // [平均律からのずれ（セント）, 合わせやすさ]
+  );
+
+  // 和音を純正律で合わせる（オルガンのドローン）: いちばん低い声部を平均律の高さに置き、すでに合わせた声部と最も合わせやすい
+  // 音程を持つ声部を一つずつ選んで、その声部に対して純正な高さにする（オルガン奏者が一声ずつ足していくように）。
+  // どの和音でも、選んだ音程はすべて純正になる（5 度の積み重ねが 3 度とぶつかるときは、5 度を優先する）。返すのは合わせた順の [音, セント]
+  function justTune(notes) {
+    const done = [[notes[0], 0]];
+    const left = notes.slice(1);
+    while (left.length) {
+      let best = null;
+      for (const n of left) {
+        for (const [m, c] of done) {
+          const [cents, rank] = PURE[mod(n - m, 12)];
+          if (!best || rank < best.rank || (rank === best.rank && n < best.n)) best = { n, rank, cents: c + cents };
+        }
+      }
+      done.push([best.n, best.cents]);
+      left.splice(left.indexOf(best.n), 1);
+    }
+    return done;
+  }
 
   // ---------------------------------------------------------------------------
   // バッファ（コンテキストごとに一度だけ作る）。種類ごとに固定 seed の stream を使うので、
@@ -125,6 +152,59 @@
     return c;
   }
 
+  // 金属の響き（808 のハットとシンバル）: 周波数の比が整数にならない 6 本の矩形波を足す。高い帯域だけを通すと、
+  // ノイズとはちがう「チッ」「チーッ」という金属の音になる。矩形波は帯域を制限して（ナイキストの手前までの奇数倍音で）作る
+  const METAL = Object.freeze([205.3, 304.4, 369.6, 522.7, 540, 800]);
+  function metalBuffer(ctx, seconds, r) {
+    const sr = ctx.sampleRate;
+    const len = Math.floor(sr * seconds);
+    const buf = ctx.createBuffer(1, len, sr);
+    const d = buf.getChannelData(0);
+    for (const f of METAL) {
+      const phase = r.next() * 2 * Math.PI;
+      for (let k = 1; k * f < sr * 0.45; k += 2) {
+        const a = 4 / Math.PI / k / METAL.length;
+        const w = (2 * Math.PI * k * f) / sr;
+        const cw = Math.cos(w);
+        const sw = Math.sin(w);
+        let s = Math.sin(phase * k);
+        let c = Math.cos(phase * k);
+        for (let i = 0; i < len; i++) {
+          d[i] += a * s;
+          const s2 = s * cw + c * sw; // 毎サンプル sin を呼ばずに、回転で進める
+          c = c * cw - s * sw;
+          s = s2;
+        }
+      }
+    }
+    return buf;
+  }
+
+  // 歪み（キック）: 入力 -1..1 を tanh(k·x) / k へ。小さい音はそのまま（傾き 1）、大きい音ほど頭が丸く潰れて倍音が増える
+  const driveCurves = new Map();
+  function driveCurve(k) {
+    if (!driveCurves.has(k)) {
+      const n = 2048;
+      const c = new Float32Array(n);
+      for (let i = 0; i < n; i++) c[i] = Math.tanh(k * ((i / (n - 1)) * 2 - 1)) / k;
+      driveCurves.set(k, c);
+    }
+    return driveCurves.get(k);
+  }
+
+  // 量子化（909 のハットとシンバルは 6 bit のサンプルで、ざらついている）: 入力 -1..1 を bits ビットの段に丸める
+  const quantizeCurves = new Map();
+  function quantizeCurve(bits) {
+    if (!quantizeCurves.has(bits)) {
+      const n = 4096;
+      const q = 2 ** (bits - 1);
+      const c = new Float32Array(n);
+      for (let i = 0; i < n; i++) c[i] = Math.round(((i / (n - 1)) * 2 - 1) * q) / q;
+      quantizeCurves.set(bits, c);
+    }
+    return quantizeCurves.get(bits);
+  }
+
   function tanhCurve() {
     const n = 2048;
     const c = new Float32Array(n);
@@ -194,7 +274,7 @@
     });
   }
 
-  const VOICES = { kick: 1, bass: 1, hat: 1, perc: 1, stab: 1, glint: 1, wave: 1 };
+  const VOICES = { kick: 1, bass: 1, hat: 1, perc: 1, clap: 1, stab: 1, glint: 1, wave: 1 };
 
   // ---------------------------------------------------------------------------
   // Voices
@@ -258,6 +338,8 @@
           return shared(ctx, name, (r) => loopBuffer(ctx, 9, 1, brown, r));
         case 'crackle':
           return shared(ctx, name, (r) => crackleBuffer(ctx, 6.5, r));
+        case 'metal':
+          return shared(ctx, name, (r) => metalBuffer(ctx, 2, r));
         default:
           return shared(ctx, 'ir:' + name, (r) => impulse(ctx, IMPULSES[name], r));
       }
@@ -575,7 +657,14 @@
       amp.gain.setTargetAtTime(0, t + K.decayAt, K.decay);
       // 存在感が低いほど暗い（水面下の鼓動 → 水面へ）
       const lp = this._filter('lowpass', K.lpMin * Math.pow(K.lpRange, p), K.lpQ);
-      o.connect(amp).connect(lp).connect(this.kickBus);
+      if (K.drive) {
+        // 909 風: 頭を丸く潰して、胴の太さと押し出しを足す
+        const shaper = ctx.createWaveShaper();
+        shaper.curve = driveCurve(K.drive);
+        o.connect(amp).connect(shaper).connect(lp).connect(this.kickBus);
+      } else {
+        o.connect(amp).connect(lp).connect(this.kickBus);
+      }
       o.start(t);
       o.stop(t + K.len);
       if (K.click > 0 && p > K.clickFrom) {
@@ -622,7 +711,16 @@
       amp.gain.linearRampToValueAtTime(e.vel, t + B.attack);
       amp.gain.setTargetAtTime(e.vel * B.sustain, t + B.attack + 0.004, dur * 0.5);
       amp.gain.setTargetAtTime(0, t + dur, B.release);
-      amp.connect(this.bassBus);
+      if (B.env) {
+        // SH-101 風（motor）: 音の頭だけフィルターが開いて「ポッ」と鳴り、すぐ丸く閉じる
+        const [base, open, tau, q] = B.env;
+        const lp = this._filter('lowpass', base, q);
+        lp.frequency.setValueAtTime(base * open * (0.6 + 0.4 * e.vel), t);
+        lp.frequency.setTargetAtTime(base, t + 0.002, tau);
+        amp.connect(lp).connect(this.bassBus);
+      } else {
+        amp.connect(this.bassBus);
+      }
       const end = t + dur + 0.2;
       for (const x of oscs) {
         x.start(t);
@@ -658,28 +756,71 @@
       o.stop(t + dur + A.release * 8);
     }
 
-    // ハット: ノイズの帯域を絞る（パッチで帯域と減衰が変わる）
+    // ハット: ノイズの帯域を絞る（パッチで帯域と減衰が変わる）。metal を持つパッチ（motor）は、
+    // 808 の金属の響きを主にして、ノイズを少し混ぜる（metal = [金属の量, ノイズの量]。ドラムマシンらしい「チッ」「チーッ」）。
+    // 金属の響きは低い基音が強いので、混ぜる前にも高域だけを通す。choke を持つパッチは、次のハットが鳴ると
+    // 鳴っているオープンを choke 秒で止める（ドラムマシンのハットは一つの声なので、オープンは次の一打で切れる）
     _hat(e, t) {
       const ctx = this.ctx;
       const H = this.P.hat;
       const k = e.open ? 1 : 0;
+      if (e.ride) return this._ride(e, t, H.ride);
+      const len = H.len[k];
+      if (H.choke && this.openHat && this.openHat.at < t) {
+        this.openHat.gain.cancelScheduledValues(t);
+        this.openHat.gain.setTargetAtTime(0, t, H.choke);
+      }
       const src = ctx.createBufferSource();
       src.buffer = this._buffer('white');
+      let head = src;
+      if (H.metal) {
+        head = this._gain(1);
+        src.connect(this._gain(H.metal[1])).connect(head);
+        const metal = ctx.createBufferSource();
+        metal.buffer = this._buffer('metal');
+        metal.connect(this._filter('highpass', H.hp[k], H.hpQ)).connect(this._gain(H.metal[0])).connect(head);
+        metal.start(t, this.r.range(0, 1.9 - len), len);
+      }
+      if (H.bits) head = this._crush(head, H.bits);
       const pk = this._filter('peaking', H.pk[k], H.pkQ);
       pk.gain.value = H.pkGain;
       const amp = ctx.createGain();
       amp.gain.setValueAtTime(0, t);
       amp.gain.linearRampToValueAtTime(e.vel, t + H.attack);
       amp.gain.setTargetAtTime(0, t + H.attack + 0.0005, H.decay[k]); // 減衰はアタックが終わってから
-      src
+      head
         .connect(this._filter('highpass', H.hp[k], H.hpQ))
         .connect(this._filter('lowpass', H.lp[k], H.lpQ))
         .connect(pk)
         .connect(amp)
         .connect(this._panner(e.pan))
         .connect(this.hatBus);
-      const len = H.len[k];
       src.start(t, this.r.range(0, 1.9 - len), len);
+      if (H.choke) this.openHat = e.open ? { gain: amp.gain, at: t } : null;
+    }
+
+    // 量子化して少しざらつかせる（小さな音の段が粗くならないよう、いったん大きくしてから丸め、元の大きさへ戻す）
+    _crush(from, bits) {
+      const shaper = this.ctx.createWaveShaper();
+      shaper.curve = quantizeCurve(bits);
+      return from.connect(this._gain(0.3)).connect(shaper).connect(this._gain(1 / 0.3));
+    }
+
+    // ライド（909 風、motor）: 金属の響きを低めの帯域で通し、長く「チーン」と伸ばす。ハットのチョークとは関係しない
+    _ride(e, t, D) {
+      const ctx = this.ctx;
+      let src = ctx.createBufferSource();
+      src.buffer = this._buffer('metal');
+      const source = src;
+      if (this.P.hat.bits) src = this._crush(src, this.P.hat.bits);
+      const amp = ctx.createGain();
+      amp.gain.setValueAtTime(0, t);
+      amp.gain.linearRampToValueAtTime(e.vel * D.level, t + 0.001);
+      amp.gain.setTargetAtTime(0, t + 0.0015, D.decay);
+      const pk = this._filter('peaking', D.pk, 1.5);
+      pk.gain.value = 6;
+      src.connect(this._filter('highpass', D.hp, 0.7)).connect(this._filter('highpass', D.hp, 0.7)).connect(pk).connect(amp).connect(this._panner(e.pan)).connect(this.hatBus);
+      source.start(t, this.r.range(0, 1.9 - D.len), D.len);
     }
 
     _perc(e, t) {
@@ -711,6 +852,27 @@
       }
     }
 
+    // 手拍子（909 風、motor）: 帯域を絞ったノイズを gap 秒おきに bursts 回はじき（何人かの手が少しずつずれて重なる）、
+    // 最後の 1 回を decay で長く残す。パーカッションのバスへ入る（真ん中）
+    _clap(e, t) {
+      const C = this.P.perc.clap;
+      const src = this.ctx.createBufferSource();
+      src.buffer = this._buffer('white');
+      const amp = this.ctx.createGain();
+      const peak = e.vel * C.level;
+      for (let i = 0; i <= C.bursts; i++) {
+        const at = t + i * C.gap;
+        amp.gain.setValueAtTime(peak, at);
+        amp.gain.setTargetAtTime(0, at + 0.0005, i < C.bursts ? C.burstDecay : C.decay);
+      }
+      src
+        .connect(this._filter('highpass', C.hp, 0.7))
+        .connect(this._filter('bandpass', C.bp, C.bpQ))
+        .connect(amp)
+        .connect(this.percBus);
+      src.start(t, this.r.range(0, 1.9 - C.len), C.len);
+    }
+
     // 和音を一瞬だけ開くスタブ。波形・レゾナンス・減衰はパッチ次第
     _stab(e, t) {
       const ctx = this.ctx;
@@ -724,7 +886,7 @@
         const hz = mtof(n);
         for (const sign of [-1, 1]) {
           const o = ctx.createOscillator();
-          o.type = S.wave;
+          o.type = sign > 0 && S.wave2 ? S.wave2 : S.wave; // wave2（motor）: 組の片方を別の波形に（鋸歯状波と矩形波で Juno 風）
           o.frequency.value = hz;
           o.detune.value = sign * this.id.stabDetune + this.r.range(-S.jitter, S.jitter);
           o.connect(sum);
@@ -830,6 +992,7 @@
     _padChord(notes, t) {
       const ctx = this.ctx;
       const D = this.P.pad;
+      if (D.organ) return this._organChord(notes, t, D.organ);
       if (this.pad) {
         this.pad.amp.gain.setTargetAtTime(0, t, D.release);
         for (const o of this.pad.oscs) o.stop(t + Math.max(14, D.release * 6.5));
@@ -857,6 +1020,64 @@
       });
       amp.connect(this.padFilter);
       this.pad = { amp, oscs };
+    }
+
+    // オルガンのドローン（fog）: 和音の音を、倍音の豊かなパイプの音で伸ばす。根音の下にペダル（16'・32'）を足し、和音は純正律で
+    // 合わせて（justTune）、少しずらした組（セレステ）とゆっくりうならせる。声部は合わせた順に一つずつ入り、それぞれが
+    // ちがう周期でゆっくり膨らんではしぼむ。和音が変わると、古い声部は後から入ったものから一つずつ引き、新しい声部と入れ替わっていく
+    _organChord(notes, t, O) {
+      const ctx = this.ctx;
+      const r = this.r;
+      if (!this.organWave) {
+        const real = new Float32Array(Math.max(...O.partials.map(([h]) => h)) + 1);
+        const imag = real.slice();
+        for (const [h, a] of O.partials) imag[h] = a;
+        this.organWave = ctx.createPeriodicWave(real, imag);
+      }
+      if (this.pad) {
+        [...this.pad.voices].reverse().forEach((v, k) => {
+          const at = t + (k && k + r.range(-0.3, 0.3)) * O.stagger; // 最後に入った声部は、すぐ引き始める
+          for (const g of [v.amp.gain, v.bloom.gain]) {
+            g.cancelScheduledValues(t); // まだ入っていない声部は、入らないまま引く
+            g.setTargetAtTime(0, at, O.release);
+          }
+          for (const o of v.oscs) o.stop(Math.max(at, v.at) + O.release * 8);
+        });
+      }
+      const pedal = new Map(O.pedal.map(([interval, level]) => [notes[0] + interval, level]));
+      const tuned = justTune([...pedal.keys()].sort((a, b) => a - b).concat(notes));
+      const voices = tuned.map(([note, cents], k) => {
+        const at = t + (k && k + r.range(-0.3, 0.3)) * O.stagger; // 最初の一声はすぐ
+        const peak = (O.level * (pedal.get(note) ?? 1)) / Math.sqrt(tuned.length);
+        const amp = this._gain(0);
+        amp.gain.setValueAtTime(0, t);
+        amp.gain.setTargetAtTime(peak, at, O.attack);
+        // 膨らんではしぼむ: 声部ごとに周期がちがうので、同じ和音のままでも響きの色が少しずつ移ろう
+        const bloom = this._gain(0);
+        bloom.gain.setValueAtTime(0, t);
+        bloom.gain.setTargetAtTime(peak * O.bloom[2], at, O.attack);
+        const lfo = ctx.createOscillator();
+        lfo.frequency.value = 1 / r.range(O.bloom[0], O.bloom[1]);
+        lfo.connect(bloom).connect(amp.gain);
+        const oscs = [lfo];
+        const celeste = O.celeste * r.range(0.7, 1.3);
+        for (const [detune, gain] of [[cents, 1], [cents + celeste, O.celesteLevel]]) {
+          const o = ctx.createOscillator();
+          o.setPeriodicWave(this.organWave);
+          o.frequency.value = mtof(note);
+          o.detune.value = detune;
+          o.connect(this._gain(gain)).connect(amp);
+          oscs.push(o);
+        }
+        for (const o of oscs) {
+          o.start(at);
+          o.onended = () => this.padOscs.delete(o);
+          this.padOscs.add(o);
+        }
+        amp.connect(this._panner(pedal.has(note) ? 0 : r.range(-O.width, O.width))).connect(this.padFilter); // ペダルは真ん中
+        return { at, amp, bloom, oscs };
+      });
+      this.pad = { voices };
     }
 
     // シンギングボウル（calm）: 実際のボウルに近い比率の倍音を、わずかにずらした 2 本の組で重ねる。

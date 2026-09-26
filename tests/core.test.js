@@ -65,7 +65,7 @@ test('WORLD: seed から決まり、固定もでき、テンポはその WORLD �
     assert.equal(id.world, new Director({ seed }).identity.world);
     seen.add(id.world);
   }
-  assert.deepEqual([...seen].sort(), [...IDS].sort(), 'どの WORLD も選ばれる');
+  assert.deepEqual([...seen].sort(), [...U.worlds.VISIBLE].sort(), '表示するどの WORLD も選ばれ、非表示の WORLD は選ばれない');
   for (const world of IDS) {
     for (const seed of SEEDS) {
       const id = new Director({ seed, world }).identity;
@@ -191,6 +191,113 @@ test('ギターの押さえ方: 標準チューニングの 6 弦で押さえら
   assert.deepEqual(voiceChord(0, 0, 'm9', [72, 88]).stab, [48, 51, 55, 58, 62]); // C m9 を C3 から
 });
 
+test('拍のない曲調（fog）: キック・ハット・パーカッション・ベース・和音の打ち・きらめきは鳴らさない', () => {
+  const worlds = IDS.filter((w) => WORLDS[w].beatless);
+  assert.ok(worlds.length > 0);
+  for (const world of worlds) {
+    for (const seed of SEEDS.slice(0, 4)) {
+      for (const { plan } of run(seed, 300, world).bars) {
+        const beats = plan.events.filter((e) => e.voice !== 'wave');
+        assert.equal(beats.length, 0, `${world} bar ${plan.bar}: ${beats.map((e) => e.voice).join(',')}`);
+      }
+    }
+  }
+});
+
+test('手拍子（motor）: W.claps を持つ WORLD だけ、決めた位置に毎小節、パーカッションの強さのまま鳴らす（揺らさない）', () => {
+  assert.ok(IDS.some((w) => WORLDS[w].claps));
+  for (const { d, bars } of cases(8, 300)) {
+    const W = WORLDS[d.identity.world];
+    for (const { plan, state } of bars) {
+      const claps = plan.events.filter((e) => e.voice === 'clap');
+      if (!W.claps) {
+        assert.equal(claps.length, 0, `${d.identity.world}: 手拍子のない曲調`);
+        continue;
+      }
+      const expected = W.claps
+        .map(([st, v]) => ({ st, vel: v * rampAt(state.levels.perc, plan.bar + st / 16) }))
+        .filter((x) => x.vel >= 0.02);
+      assert.deepEqual(claps.map((e) => e.step), expected.map((x) => x.st), `${d.identity.world} bar ${plan.bar}`);
+      claps.forEach((e, i) => assert.ok(Math.abs(e.vel - expected[i].vel) < 0.001, `${d.identity.world} bar ${plan.bar}: clap ${e.vel}`));
+    }
+  }
+});
+
+test('ドラムマシンのハット（motor）: W.machine の WORLD は、ハットの強さもタイミングも揺らさない', () => {
+  const machines = IDS.filter((w) => WORLDS[w].machine);
+  assert.ok(machines.length > 0);
+  for (const world of machines) {
+    for (const seed of SEEDS.slice(0, 4)) {
+      const { d, bars } = run(seed, 200, world);
+      const sw = d.identity.swing;
+      let hats = 0;
+      for (const { plan, state } of bars) {
+        const table = CONTENT.HATS[state.parts.hats.style];
+        for (const e of plan.events.filter((x) => x.voice === 'hat' && !x.ride)) {
+          const st = Math.floor(e.step);
+          assert.ok(table[st], `${world} bar ${plan.bar}: hat off the pattern at ${e.step}`);
+          assert.ok(Math.abs(e.step - (st % 2 ? st + sw : st)) < 1e-9, `${world} bar ${plan.bar}: hat timing ${e.step}`);
+          const vel = table[st][0] * rampAt(state.levels.hats, plan.bar + st / 16) * (WORLDS[world].accent ? WORLDS[world].accent[st] : 1);
+          assert.ok(Math.abs(e.vel - vel) < 0.001, `${world} bar ${plan.bar}: hat velocity ${e.vel} (expected ${vel})`);
+          assert.equal(e.pan, 0.15);
+          hats++;
+        }
+      }
+      assert.ok(hats > 1000, `${world}: ${hats} hats`);
+    }
+  }
+});
+
+test('リフ（motor）: W.riff の WORLD は、曲ごとに決まった形を riff.bars 小節ごとに繰り返す（和音の高い方からの順位で音を選ぶ）', () => {
+  for (const world of IDS.filter((w) => WORLDS[w].riff)) {
+    for (const seed of SEEDS.slice(0, 4)) {
+      const { d, bars } = run(seed, 200, world);
+      const shape = WORLDS[world].riff.shapes[d.identity.seed % WORLDS[world].riff.shapes.length];
+      let checked = 0;
+      for (const { plan, state } of bars) {
+        const gl = plan.events.filter((e) => e.voice === 'glint');
+        if (!gl.length) continue;
+        const pool = state.chord.glint;
+        const want = shape.filter(([pos]) => Math.floor(pos / 16) === plan.bar % (WORLDS[world].riff.bars || 2));
+        assert.deepEqual(gl.map((e) => Math.floor(e.step)), want.map(([pos]) => pos % 16), `${world} bar ${plan.bar}`);
+        gl.forEach((e, i) => assert.equal(e.note, pool[Math.max(0, pool.length - 1 - want[i][1])]));
+        checked++;
+      }
+      assert.ok(checked > 50);
+    }
+  }
+});
+
+test('スタブの置き場所のずれ（motor）と、和音の中の順位で書いたベース: どちらも決まった形のまま動く', () => {
+  const { BASS } = CONTENT;
+  let shifted = 0;
+  let ranked = 0;
+  for (const world of IDS.filter((w) => WORLDS[w].stabShift || Object.values(WORLDS[w].sections).some((x) => x.bassPool.some((b) => BASS[b].some((n) => typeof n[3] === 'string'))))) {
+    const W = WORLDS[world];
+    for (const seed of SEEDS.slice(0, 4)) {
+      const { d, bars } = run(seed, 200, world);
+      for (const { plan, state } of bars) {
+        const sh = W.stabShift ? W.stabShift[plan.bar % W.stabShift.length] : 0;
+        const pattern = (plan.bar % 2 ? state.parts.stabs.b : state.parts.stabs.a).map((x) => (x + sh) % 16);
+        for (const e of plan.events.filter((x) => x.voice === 'stab')) {
+          assert.ok(pattern.includes(Math.floor(e.step)), `${world} bar ${plan.bar}: stab at ${e.step}, pattern ${pattern}`);
+          if (sh) shifted++;
+        }
+        const table = BASS[state.parts.bass];
+        if (!table.some((n) => typeof n[3] === 'string')) continue;
+        const iv = state.chord.pad.map((n) => n - state.chord.pad[0]);
+        for (const e of plan.events.filter((x) => x.voice === 'bass')) {
+          const row = table.find((n) => n[0] === Math.floor(e.step));
+          const want = typeof row[3] === 'string' ? (((iv[Math.min(Number(row[3].slice(1)), iv.length - 1)] % 12) + 12) % 12) : row[3];
+          assert.equal(e.note - state.chord.bass, want, `${world} bar ${plan.bar}: bass ${row}`);
+          ranked++;
+        }
+      }
+    }
+  }
+  assert.ok(shifted > 100 && ranked > 100, `shifted ${shifted}, ranked ${ranked}`);
+});
+
 test('状態の書き手は Director だけ: 状態もプランも凍結されている', () => {
   const d = new Director({ seed: 7 });
   const plan = d.nextBar();
@@ -253,17 +360,17 @@ test('ミニマル: フレーズの変化はほぼ一度に一パートまで、
       }
     }
     assert.ok(phrases > 400, `${world}: phrases ${phrases}`);
-    assert.ok(multi / changes < 0.05, `${world}: multi-part ${multi}/${changes}`);
+    if (changes) assert.ok(multi / changes < 0.05, `${world}: multi-part ${multi}/${changes}`); // 動くパートがない曲調（fog）は数えない
     assert.ok(rejected / phrases < 0.03, `${world}: all-rejected ${rejected}/${phrases}`);
   }
 });
 
 test('パート間の和声: ベース・パッド・きらめき・音のある波は、いま鳴っているスタブの和音から外れない', () => {
   for (const { plan, state } of [...cases(8, 300)].flatMap((c) => c.bars)) {
-    const chord = pcs(state.chord.stab);
+    const chord = pcs(state.chord.pad); // パッドはいつも根音から積んだ形（スタブは根音を抜くことがある）
     assert.ok(chord.has(((state.chord.bass % 12) + 12) % 12), 'bass root');
     for (const e of plan.events) {
-      if (e.voice === 'stab') assert.deepEqual(pcs(e.notes), chord);
+      if (e.voice === 'stab') for (const n of pcs(e.notes)) assert.ok(chord.has(n), `stab ${n}`);
       if (e.voice === 'glint') assert.ok(chord.has(e.note % 12), `glint ${e.note}`);
       if (e.voice === 'bass') assert.ok(chord.has(e.note % 12), `bass ${e.note}`);
       if (e.voice === 'wave' && e.notes) {

@@ -73,6 +73,9 @@ class FakeSource extends FakeNode {
     this.startAt = null;
     this.stopAt = null;
   }
+  setPeriodicWave(wave) {
+    this.wave = wave;
+  }
   start(t = 0) {
     assert.equal(this.startAt, null, `${this.kind} started twice`);
     this.startAt = t;
@@ -102,6 +105,9 @@ class FakeContext {
   }
   createBufferSource() {
     return new FakeSource(this, 'buffer', { playbackRate: 1 });
+  }
+  createPeriodicWave(real, imag) {
+    return { real, imag };
   }
   createBiquadFilter() {
     return new FakeNode(this, 'biquad', { frequency: 350, Q: 1, gain: 0 });
@@ -354,6 +360,158 @@ test('揺り（箏）: ときどき弾いたあとに音程をゆっくり上下
     }
     assert.ok(swayed > 0 && still > 0, `${world}: swayed ${swayed}, still ${still}`);
   }
+});
+
+test('オルガンのドローン（fog）: 和音を純正律で合わせ、声部を一つずつ入れ、和音が変わると後から入った声部から一つずつ引く', () => {
+  const { mtof } = U.util;
+  const organs = IDS.filter((w) => PATCHES[w].pad.organ);
+  assert.ok(organs.length > 0);
+  // [和音, 入る順の [音, A3（220 Hz）からの純正な比]]。ペダル（32'・16'）と根音のあと、5 度・4 度で合わせられる声部から先に入る
+  const cases = [
+    // A m9: 5 度、その 5 度（9 度）、5 度の下の長 3 度（短 3 度）、その 5 度（短 7 度）
+    [[57, 60, 64, 67, 71], [[33, 1 / 4], [45, 1 / 2], [57, 1], [64, 3 / 2], [71, 9 / 4], [60, 6 / 5], [67, 9 / 5]]],
+    // A m11: 11 度（4 度）から 5 度ずつ下へ（短 7 度、短 3 度は 32:27）、短 7 度の上の長 3 度（9 度）
+    [[57, 60, 67, 71, 74], [[33, 1 / 4], [45, 1 / 2], [57, 1], [74, 8 / 3], [67, 16 / 9], [60, 32 / 27], [71, 20 / 9]]],
+    // 5 度のない短 3 度は 6:5
+    [[57, 60], [[33, 1 / 4], [45, 1 / 2], [57, 1], [60, 6 / 5]]],
+  ];
+  for (const world of organs) {
+    const O = PATCHES[world].pad.organ;
+    assert.deepEqual(O.pedal.map(([i]) => i), [-24, -12], "この検査はペダルが 32' と 16' の前提");
+    for (const [notes, expected] of cases) {
+      const ctx = new FakeContext();
+      const voices = new U.Voices(ctx, new U.core.Director({ seed: 1, world }).identity);
+      const s0 = ctx.sources.length;
+      voices._padChord(notes, 1);
+      const all = ctx.sources.slice(s0);
+      const pipes = all.filter((o) => o.wave);
+      assert.equal(pipes.length, expected.length * 2, `${world}: two pipes (with celeste) per voice`);
+      assert.equal(all.length - pipes.length, expected.length, `${world}: one bloom per voice`);
+      let prev = 1;
+      expected.forEach(([note, ratio], k) => {
+        const [a, b] = pipes.slice(k * 2, k * 2 + 2);
+        assert.equal(a.frequency.value, mtof(note));
+        const hz = mtof(note) * 2 ** (a.detune.value / 1200);
+        assert.ok(Math.abs(hz / (220 * ratio) - 1) < 1e-5, `${world} ${notes}: ${note} is ${hz.toFixed(3)} Hz, pure ${(220 * ratio).toFixed(3)}`);
+        const celeste = b.detune.value - a.detune.value;
+        assert.ok(celeste >= O.celeste * 0.7 - 1e-9 && celeste <= O.celeste * 1.3 + 1e-9, `${world}: celeste ${celeste}`);
+        assert.ok(k === 0 ? a.startAt === 1 : a.startAt > prev, `${world}: voice ${k} enters after the one before`);
+        assert.equal(b.startAt, a.startAt);
+        prev = a.startAt;
+      });
+      assert.ok(prev - 1 > O.stagger * (expected.length - 2), `${world}: the voices are spread over time (${prev - 1}s)`);
+
+      // 和音が変わると、古い声部は後から入ったものから一つずつ引く。まだ鳴っている途中で止めない
+      const old = voices.pad.voices;
+      voices._padChord([62, 65, 69, 72], 60);
+      const exits = old.map((v) => {
+        const last = v.amp.gain.events[v.amp.gain.events.length - 1];
+        assert.equal(last.kind, 'target');
+        assert.equal(last.value, 0);
+        for (const o of v.oscs) assert.ok(o.stopAt >= last.time + O.release * 6, `${world}: a pipe is cut before it fades`);
+        return last.time;
+      });
+      for (let k = 1; k < exits.length; k++) assert.ok(exits[k] < exits[k - 1], `${world}: later voices leave first`);
+      assert.equal(exits[exits.length - 1], 60, `${world}: the last voice to enter leaves at once`);
+      assert.ok(exits[0] - 60 > O.stagger * (exits.length - 2), `${world}: the old voices leave one by one`);
+    }
+  }
+});
+
+test('909 風のドラム（motor）: 手拍子は何度かはじいて最後を長く残し、ハットは金属の響きを混ぜ、キックは丸く歪ませる', () => {
+  let tested = 0;
+  for (const world of IDS) {
+    const P = PATCHES[world];
+    assert.equal(!!U.worlds.WORLDS[world].claps, !!P.perc.clap, `${world}: 手拍子を鳴らす WORLD だけが手拍子の音色を持つ`);
+    if (!P.perc.clap && !P.hat.metal && !P.kick.drive) continue;
+    tested++;
+    const ctx = new FakeContext();
+    const voices = new U.Voices(ctx, new U.core.Director({ seed: 1, world }).identity);
+    if (P.perc.clap) {
+      const C = P.perc.clap;
+      const p0 = ctx.params.length;
+      const s0 = ctx.sources.length;
+      voices._clap({ step: 4, vel: 0.8 }, 2);
+      const src = ctx.sources.slice(s0);
+      assert.equal(src.length, 1);
+      assert.equal(src[0].buffer, voices._buffer('white'));
+      const amp = ctx.params.slice(p0).find((p) => p.label === 'gain.gain' && p.events.length > 0);
+      assert.deepEqual(amp.events.map((e) => e.kind), Array.from({ length: C.bursts + 1 }, () => ['set', 'target']).flat());
+      amp.events.forEach((e, i) => {
+        const k = Math.floor(i / 2);
+        if (e.kind === 'set') {
+          assert.ok(Math.abs(e.time - (2 + k * C.gap)) < 1e-9, `${world}: burst ${k} at ${e.time}`);
+          assert.ok(Math.abs(e.value - 0.8 * C.level) < 1e-9);
+        } else assert.equal(e.value, 0);
+      });
+    }
+    if (P.hat.metal) {
+      const s0 = ctx.sources.length;
+      voices._hat({ step: 2, vel: 0.7, open: true, pan: 0 }, 3);
+      const src = ctx.sources.slice(s0);
+      const metal = voices._buffer('metal');
+      assert.deepEqual(src.map((s) => s.buffer === metal).sort(), [false, true], `${world}: noise and metal`);
+      const d = metal.getChannelData(0);
+      const rms = Math.sqrt(d.reduce((a, x) => a + x * x, 0) / d.length);
+      assert.ok(rms > 0.2 && rms < 1, `${world}: metal rms ${rms}`);
+    }
+    if (P.hat.bits) {
+      // 6 bit のハット: 量子化の段が 2^bits + 1 個ほどの曲線を通る
+      const shapers = [];
+      const make = ctx.createWaveShaper.bind(ctx);
+      ctx.createWaveShaper = () => {
+        const n = make();
+        shapers.push(n);
+        return n;
+      };
+      voices._hat({ step: 3, vel: 0.5, open: false, pan: 0 }, 6);
+      ctx.createWaveShaper = make;
+      assert.equal(shapers.length, 1, `${world}: the hat goes through a quantizer`);
+      const levels = new Set(shapers[0].curve);
+      assert.ok(levels.size <= 2 ** P.hat.bits + 1 && levels.size > 2 ** (P.hat.bits - 1), `${world}: ${levels.size} steps`);
+    }
+    if (P.bass.env) {
+      // SH-101 風のベース: 音ごとのフィルターが頭で開き、閉じる
+      const p0 = ctx.params.length;
+      voices._bass({ step: 2, note: 36, vel: 1, len: 1.2 }, 7);
+      const f = ctx.params.slice(p0).find((p) => p.label === 'biquad.frequency' && p.events.length === 2);
+      assert.ok(f, `${world}: a per-note filter`);
+      assert.ok(f.events[0].value > P.bass.env[0] * 2 && f.events[1].value === P.bass.env[0] && f.events[1].kind === 'target', `${world}: the filter opens at the head and closes`);
+    }
+    if (P.hat.choke) {
+      // 次のハットが鳴ると、鳴っているオープンはそこで止まる（閉じたハットのあとのハットは何も止めない）
+      const p0 = ctx.params.length;
+      voices._hat({ step: 2, vel: 0.7, open: true, pan: 0 }, 5);
+      const open = ctx.params.slice(p0).find((p) => p.label === 'gain.gain' && p.events.some((e) => e.kind === 'linear'));
+      voices._hat({ step: 3, vel: 0.4, open: false, pan: 0 }, 5.12);
+      const last = open.events[open.events.length - 1];
+      assert.deepEqual([last.kind, last.value, last.time], ['target', 0, 5.12], `${world}: the open hat is choked`);
+      const p1 = ctx.params.length;
+      voices._hat({ step: 5, vel: 0.4, open: false, pan: 0 }, 5.25);
+      assert.equal(open.events.length, 4, `${world}: an open hat is choked only once`);
+      assert.ok(ctx.params.slice(p1).length > 0);
+    }
+    if (P.kick.drive) {
+      const shapers = [];
+      const make = ctx.createWaveShaper.bind(ctx);
+      ctx.createWaveShaper = () => {
+        const n = make();
+        shapers.push(n);
+        return n;
+      };
+      voices._kick({ step: 0, vel: 1, presence: 1, duck: 0 }, 4);
+      assert.equal(shapers.length, 1, `${world}: the kick goes through a shaper`);
+      const c = shapers[0].curve;
+      const n = c.length - 1;
+      const x = (i) => (i / n) * 2 - 1;
+      const [lo, mid, q3, hi] = [0.49, 0.5, 0.75, 0.51].map((f) => Math.round(n * f));
+      const slope = (c[hi] - c[lo]) / (x(hi) - x(lo));
+      assert.ok(Math.abs(slope - 1) < 0.01, `${world}: quiet sound passes unchanged (slope ${slope})`);
+      assert.ok(c[n] < 0.9 && c[n] > 0 && Math.abs(c[0] + c[n]) < 1e-6, `${world}: the top is rounded (${c[n]})`);
+      assert.ok(c[n] - c[q3] < 0.6 * (c[q3] - c[mid]), `${world}: the curve flattens toward the top`);
+    }
+  }
+  assert.ok(tested > 0);
 });
 
 test('一度きりの音源は、必ず始まった後に止まる予定を持つ', () => {

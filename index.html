@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400&amp;family=Jost:wght@300;400&amp;display=swap">
 <!-- ?v= は版ごとに上げる（ブラウザが古い CSS / JS を覚えたまま、新しいページだけ読むことがないように） -->
-<link rel="stylesheet" href="style.css?v=1.14">
+<link rel="stylesheet" href="style.css?v=1.15">
 </head>
 <body>
 <canvas id="sea" aria-hidden="true"></canvas>
@@ -48,7 +48,7 @@
   <p class="hint" lang="en"><kbd>space</kbd> play / stop</p>
 </footer>
 
-<p class="version" lang="en">v1.14</p>
+<p class="version" lang="en">v1.15</p>
 
 <button id="about-open" class="about-open" type="button" lang="en" aria-haspopup="dialog">about</button>
 
@@ -87,14 +87,12 @@
         <dt lang="en">deep</dt><dd>深海。低いドローンと、とても長い残響の中へ沈んでいく</dd>
         <dt lang="en">calm</dt><dd>リラクゼーションに全振り。遠い心拍のような鼓動の中で、シンギングボウルがゆっくり響く</dd>
         <dt lang="en">glide</dt><dd>滑るように流れる。ベース・パーカッション・アルペジオの周期が少しずつずれながら、途切れなく流れる</dd>
-        <dt lang="en">ember</dt><dd>残り火。暖かくくすんだ和音と、少し切ない和声</dd>
-        <dt lang="en">fog</dt><dd>霧の中の四つ打ち。キックは聞こえないまま、拍ごとにほかの音を呼吸させる。低音のない、漂う曲調</dd>
-        <dt lang="en">motor</dt><dd>デトロイト。希望と切なさが混ざった和音を、ストリングスのような音が刻む。夜明け前の都市のような前向きな曲調</dd>
+        <dt lang="en">fog</dt><dd>霧。拍はなく、オルガンのような持続音が一声ずつ重なっていく。和音が変わるときも一声ずつ入れ替わり、純正律の澄んだ響きがゆっくりうなりながら、満ち引きする霧に溶ける</dd>
+        <dt lang="en">motor</dt><dd>デトロイト。明るいのか暗いのか分からない和音を、根音を抜いた柔らかなシンセが妙な位置で刻む。前に出る 909 風のドラム（ドンドンと押すキック、チキチキと刻むハット、手拍子、ライド）と、曲を回すベース、ときどき浮かぶベル。夜の都市のように切なく、未来的</dd>
         <dt lang="en">click</dt><dd>マイクロハウス。プチプチした細かなクリックが主役で、軽く跳ねる。小さく乾いた和音と、短く弾むベース</dd>
         <dt lang="en">sunset</dt><dd>夕暮れ（バレアリック）。暖かい長調の中で、ナイロンギターがゆっくり和音を鳴らして余韻を残し、ときどき単音のフレーズを弾く。コンガとシェイカー</dd>
         <dt lang="en">acid</dt><dd>ミニマル・アシッド。TB-303 風のベースが一音ごとに鳴き、ときどき音程が滑る。フィルターのつまみがゆっくり回っていく</dd>
         <dt lang="en">phase</dt><dd>ライヒ風。マリンバのような音が途切れなく流れ、少しずつずれながら模様を変えていく</dd>
-        <dt lang="en">float</dt><dd>漂うアシッド。キックは聞こえないまま、303 がゆっくり鳴いて深いエコーに溶けていく</dd>
         <dt lang="en">skank</dt><dd>ダブ・ギター。短く刻んだギターを、深いエコーへ投げ込む</dd>
         <dt lang="en">shore</dt><dd>水辺の箏。弾いたあとに音程がゆっくり揺れる単音が、長いエコーの中に消えていく</dd>
       </dl>
@@ -129,14 +127,12 @@
         <dt>deep</dt><dd>The deep sea. Sinking into low drones and very long reverb</dd>
         <dt>calm</dt><dd>Pure relaxation. Singing bowls ring slowly over a pulse like a distant heartbeat</dd>
         <dt>glide</dt><dd>Gliding. Bass, percussion and arpeggio cycles drift slightly out of step and flow on without a break</dd>
-        <dt>ember</dt><dd>Embers. Warm, dusky chords and gently wistful harmony</dd>
-        <dt>fog</dt><dd>Four-on-the-floor in the fog. The kick is never heard, yet it makes everything else breathe on each beat. No low end — it just drifts</dd>
-        <dt>motor</dt><dd>Detroit. String-like stabs pulse through chords full of hope and longing. Forward-looking, like a city just before dawn</dd>
+        <dt>fog</dt><dd>Fog. No beat at all: organ-like tones enter one voice at a time, and when the chord changes they trade places one by one. Pure, just-intoned chords beat slowly as they dissolve into drifting mist</dd>
+        <dt>motor</dt><dd>Detroit. Soft rootless synth chords, caught between sad and hopeful, land in odd places over up-front 909-style drums (a driving kick, ticking hats, handclaps, ride), a bassline that keeps the track turning, and bells that surface now and then. Melancholic and futuristic, like a city at night</dd>
         <dt>click</dt><dd>Microhouse. Tiny crackling clicks take the lead with a light bounce, over small dry chords and a short, springy bass</dd>
         <dt>sunset</dt><dd>Balearic sunset. Over warm major chords, a nylon guitar lets slow strums ring out and now and then plays a few single notes, with congas and shakers</dd>
         <dt>acid</dt><dd>Minimal acid. A TB-303-style bassline squelches on every note and sometimes slides between them, as the filter knob slowly turns</dd>
         <dt>phase</dt><dd>Reich-style phasing. Marimba-like notes flow without a break, slowly shifting their pattern</dd>
-        <dt>float</dt><dd>Floating acid. The kick is never heard as a 303 squelches slowly into deep echoes</dd>
         <dt>skank</dt><dd>Dub guitar. Short, muted guitar chops thrown into deep echoes</dd>
         <dt>shore</dt><dd>Koto by the water. Single notes waver after each pluck and fade into long echoes</dd>
       </dl>
@@ -147,14 +143,14 @@
 
 <p id="status" class="visually-hidden" role="status" aria-live="polite"></p>
 
-<script src="js/core/util.js?v=1.14"></script>
-<script src="js/core/rng.js?v=1.14"></script>
-<script src="js/core/content.js?v=1.14"></script>
-<script src="js/core/worlds.js?v=1.14"></script>
-<script src="js/core/director.js?v=1.14"></script>
-<script src="js/audio/patches.js?v=1.14"></script>
-<script src="js/audio/voices.js?v=1.14"></script>
-<script src="js/audio/transport.js?v=1.14"></script>
-<script src="js/app.js?v=1.14"></script>
+<script src="js/core/util.js?v=1.15"></script>
+<script src="js/core/rng.js?v=1.15"></script>
+<script src="js/core/content.js?v=1.15"></script>
+<script src="js/core/worlds.js?v=1.15"></script>
+<script src="js/core/director.js?v=1.15"></script>
+<script src="js/audio/patches.js?v=1.15"></script>
+<script src="js/audio/voices.js?v=1.15"></script>
+<script src="js/audio/transport.js?v=1.15"></script>
+<script src="js/app.js?v=1.15"></script>
 </body>
 </html>
