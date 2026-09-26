@@ -1238,6 +1238,252 @@
         },
       },
     },
+
+    // ディープハウス。温かいエレピの和音（dust の断片の頭だけを切り出す）が、小節に揃う長さのループで
+    // シンコペーションを刻み、根音はベースに任せる。重めのシャッフル、柔らかいシェイカーとクラップ、コンガ、丸いオルガン風のベース
+    velvet: {
+      label: 'velvet',
+      bpm: [118, 122],
+      swing: [0.14, 0.2],
+      delaySteps: 3,
+      voicing: 'rootless',
+      progressions: { ids: ['dust-dorian', 'motor-plane', 'motor-hope'], bars: [8, 16] },
+      changeChance: { intro: 0.3, rise: 0.4, groove: 0.5, deep: 0.45, breakdown: 0.5 },
+      budget: { density: 16, occupancy: 7, smear: 4, joint: 0.9 },
+      drift: { bright: [26, 60, 140], decay: [34, 80], space: [44, 100] },
+      feedback: { base: 0.38, swing: 0.05, min: 0.3, max: 0.48 },
+      throwChance: { groove: 0.05, deep: 0.1, rise: 0, breakdown: 0.2 },
+      riser: false,
+      percSlots: [3, 7, 11, 14],
+      percHits: [2, 3],
+      // コンガ: キックと重ならない位置の、2 小節の決まった形
+      percLoop: [[3, 0.6], [6, 0.8], [10, 0.5], [14, 0.7], [19, 0.6], [22, 0.8], [27, 0.6], [30, 0.7]],
+      accent: [0.9, 0.7, 1, 0.8, 0.9, 0.7, 1, 0.8, 0.9, 0.7, 1, 0.8, 0.9, 0.7, 1, 0.9],
+      claps: [[4, 0.8], [12, 0.8]],
+      // 和音の刻み: 小節に揃う長さ（8 と 16 ステップ）のループで、断片の頭（弾いた瞬間）だけを短く鳴らす。
+      // 始まりのずれでシンコペーションになり、フレーズごとにときどき置き場所が変わる
+      loops: {
+        layers: [
+          { part: 'stabs', cycles: [8], offsets: [0, 0.03], gate: 0.3, level: 1, pan: -0.15, rate: 1 },
+          { part: 'glints', cycles: [16], offsets: [0, 0.03], gate: 0.45, level: 0.8, pan: 0.2, rate: 1 },
+        ],
+        find: 0.35,
+        stutter: 0,
+      },
+      waves: { periods: [8, 12, 16], chance: 0.4, rise: [48, 80], fall: [80, 120], peak: [0.15, 0.3] },
+      glint: { starts: [0], gaps: [4], range: [60, 84] },
+      sections: {
+        intro: {
+          bars: [8], kickless: true, duck: 0, open: 0.9,
+          stabPool: 'dubSparse', hatStyles: ['sixteenths'], bassPool: ['offbeat'], glint: 0,
+          cues: [
+            [0, 'waves', 0.5, 2], [0, 'stabs', 0.8, 4], [0, 'pad', 0.3, 8], [0, 'glints', 0, 0],
+            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0.5, 4], [0, 'perc', 0, 0],
+            [4, 'kick', 0.5, 4],
+          ],
+          next: [['rise', 1]],
+        },
+        rise: {
+          bars: [8], kickless: false, duck: 0.15, open: 0.95,
+          stabPool: 'dubSparse', hatStyles: ['sixteenths'], bassPool: ['detroitCell2'], glint: 0,
+          cues: [
+            [0, 'kick', 1, 4], [0, 'stabs', 1, 2], [0, 'pad', 0.3, 4], [0, 'waves', 0.35, 4],
+            [0, 'glints', 0.6, 4], [0, 'hats', 0.8, 4], [2, 'bass', 1, 4], [4, 'perc', 0.7, 4],
+          ],
+          next: [['groove', 1]],
+        },
+        groove: {
+          bars: [24, 32, 40], kickless: false, duck: 0.15, open: 1,
+          stabPool: 'dubSparse', hatStyles: ['sixteenths', 'detroit16'], bassPool: ['detroitCell', 'detroitCell2'], glint: 0,
+          cues: [
+            [0, 'kick', 1, 0], [0, 'bass', 1, 0], [0, 'hats', 0.9, 2], [0, 'perc', 0.8, 2],
+            [0, 'stabs', 1, 2], [0, 'glints', 0.8, 4], [0, 'pad', 0.25, 4], [0, 'waves', 0.3, 4],
+          ],
+          next: [['deep', 0.45], ['breakdown', 0.35], ['groove', 0.2]],
+        },
+        deep: {
+          bars: [16, 24], kickless: false, duck: 0.12, open: 0.9,
+          stabPool: 'dubSparse', hatStyles: ['sixteenths'], bassPool: ['detroitCell2', 'detroitPush'], glint: 0,
+          cues: [
+            [0, 'kick', 1, 0], [0, 'bass', 0.95, 2], [0, 'hats', 0.7, 4], [0, 'perc', 1, 4],
+            [0, 'stabs', 0.7, 4], [0, 'glints', 1, 4], [0, 'pad', 0.4, 4], [0, 'waves', 0.35, 4],
+          ],
+          next: [['groove', 0.55], ['breakdown', 0.45]],
+        },
+        breakdown: {
+          bars: [8, 12], kickless: true, duck: 0, open: 1.1,
+          stabPool: 'dubSparse', hatStyles: ['sparse'], bassPool: ['offbeat'], glint: 0,
+          cues: [
+            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0.3, 2], [0, 'perc', 0.3, 2],
+            [0, 'stabs', 1, 2], [0, 'glints', 0.6, 2], [0, 'pad', 0.5, 3], [0, 'waves', 0.5, 4],
+          ],
+          next: [['rise', 0.4], ['groove', 0.6]],
+        },
+      },
+    },
+
+    // ガムランのテクノ。金属の鍵盤打楽器のようなベルが、16 分で上下に組み合う細かい音型（コテカン）を 1 小節で繰り返し、
+    // 4 小節に 1 回くらいゴングが区切る。太鼓（クンダン）のような決まった形、開いた響きの和音、柔らかいキック
+    bronze: {
+      label: 'bronze',
+      bpm: [110, 116],
+      swing: [0, 0.03],
+      delaySteps: 3,
+      progressions: { ids: ['open-four', 'still'], bars: [16] },
+      changeChance: { intro: 0.3, rise: 0.4, groove: 0.5, deep: 0.45, breakdown: 0.5 },
+      budget: { density: 16, occupancy: 7, smear: 4, joint: 0.9 },
+      drift: { bright: [24, 56, 130], decay: [30, 72], space: [40, 96] },
+      feedback: { base: 0.36, swing: 0.05, min: 0.28, max: 0.46 },
+      throwChance: { groove: 0, deep: 0, rise: 0, breakdown: 0.1 },
+      riser: false,
+      percSlots: [3, 7, 11, 14],
+      percHits: [2, 3],
+      // 太鼓（クンダン）: 2 小節の決まった形
+      percLoop: [[2, 0.7], [3, 0.5], [6, 0.8], [10, 0.6], [11, 0.5], [14, 0.8], [18, 0.7], [22, 0.6], [23, 0.5], [26, 0.8], [29, 0.6], [30, 0.7]],
+      // ゴング: 1 小節目の頭の機会に 25 %（4 小節に 1 回くらい）。澄んだ鈴の仕組みを低く長く
+      ride: [[0, 1]],
+      rideChance: 0.25,
+      // コテカン: 1 小節で一回りする 16 分の組み合わせ [位置, 和音の高い方からの順位, 強さ]。上の 3 音の中を細かく行き来する
+      riff: {
+        bars: 1,
+        level: 0.85,
+        shapes: [
+          [[0, 2, 1], [1, 1, 0.6], [2, 0, 0.8], [3, 1, 0.6], [4, 2, 0.9], [6, 1, 0.7], [7, 0, 0.6], [8, 2, 1], [9, 1, 0.6], [10, 0, 0.8], [12, 1, 0.9], [13, 2, 0.6], [14, 0, 0.8], [15, 1, 0.6]],
+          [[0, 1, 1], [2, 2, 0.7], [3, 1, 0.6], [4, 0, 0.9], [5, 1, 0.6], [6, 2, 0.8], [8, 1, 1], [10, 0, 0.8], [11, 1, 0.6], [12, 2, 0.9], [14, 1, 0.8], [15, 0, 0.6]],
+          [[0, 0, 1], [1, 1, 0.6], [3, 2, 0.8], [4, 1, 0.9], [6, 0, 0.8], [7, 1, 0.6], [8, 2, 1], [9, 1, 0.6], [11, 0, 0.8], [12, 1, 0.9], [14, 2, 0.8], [15, 1, 0.6]],
+        ],
+      },
+      waves: { periods: [6, 8, 10], chance: 0.4, rise: [40, 64], fall: [64, 96], peak: [0.15, 0.3] },
+      glint: { starts: [0], gaps: [4], range: [67, 86] },
+      sections: {
+        intro: {
+          bars: [8], kickless: true, duck: 0, open: 0.9,
+          stabPool: 'dubSparse', hatStyles: ['sparse'], bassPool: ['offbeat'], glint: 0,
+          cues: [
+            [0, 'waves', 0.5, 2], [0, 'stabs', 0, 0], [0, 'pad', 0.35, 8], [0, 'glints', 0.7, 4],
+            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0.4, 4], [0, 'perc', 0, 0],
+            [4, 'kick', 0.4, 4],
+          ],
+          next: [['rise', 1]],
+        },
+        rise: {
+          bars: [8], kickless: false, duck: 0.12, open: 0.95,
+          stabPool: 'dubSparse', hatStyles: ['sparse'], bassPool: ['offbeat'], glint: 0,
+          cues: [
+            [0, 'kick', 0.9, 4], [0, 'stabs', 0, 0], [0, 'pad', 0.3, 4], [0, 'waves', 0.35, 4],
+            [0, 'glints', 0.9, 4], [0, 'hats', 0.6, 4], [2, 'bass', 0.9, 4], [2, 'perc', 0.8, 4],
+          ],
+          next: [['groove', 1]],
+        },
+        groove: {
+          bars: [24, 32, 40], kickless: false, duck: 0.12, open: 1,
+          stabPool: 'dubSparse', hatStyles: ['sparse', 'whisper'], bassPool: ['offbeat', 'sparse'], glint: 0,
+          cues: [
+            [0, 'kick', 0.9, 0], [0, 'bass', 0.9, 0], [0, 'hats', 0.6, 2], [0, 'perc', 0.9, 2],
+            [0, 'stabs', 0, 0], [0, 'glints', 1, 2], [0, 'pad', 0.25, 4], [0, 'waves', 0.3, 4],
+          ],
+          next: [['deep', 0.45], ['breakdown', 0.35], ['groove', 0.2]],
+        },
+        deep: {
+          // コテカンが引いて、太鼓とゴングが前に出る
+          bars: [16, 24], kickless: false, duck: 0.1, open: 0.9,
+          stabPool: 'dubSparse', hatStyles: ['sparse'], bassPool: ['offbeat'], glint: 0,
+          cues: [
+            [0, 'kick', 0.9, 0], [0, 'bass', 0.85, 2], [0, 'hats', 0.5, 4], [0, 'perc', 1, 4],
+            [0, 'stabs', 0, 0], [0, 'glints', 0.55, 4], [0, 'pad', 0.35, 4], [0, 'waves', 0.35, 4],
+          ],
+          next: [['groove', 0.55], ['breakdown', 0.45]],
+        },
+        breakdown: {
+          bars: [8, 12], kickless: true, duck: 0, open: 1.1,
+          stabPool: 'dubSparse', hatStyles: ['sparse'], bassPool: ['offbeat'], glint: 0,
+          cues: [
+            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0.4, 2], [0, 'perc', 0.3, 2],
+            [0, 'stabs', 0, 0], [0, 'glints', 0.9, 2], [0, 'pad', 0.45, 3], [0, 'waves', 0.5, 4],
+          ],
+          next: [['rise', 0.4], ['groove', 0.6]],
+        },
+      },
+    },
+
+    // シーケンサーのスペース・ミュージック。16 分で途切れなく回る 1 小節のシーケンス（アナログシンセ風の音）が、
+    // 深いディレイの中で反射して重なり、広いパッドが宇宙のように包む。キックとベースは控えめ
+    orbit: {
+      label: 'orbit',
+      bpm: [114, 120],
+      swing: [0, 0],
+      delaySteps: 3,
+      progressions: { ids: ['still', 'i-VI', 'motor-sink'], bars: [16] },
+      changeChance: { intro: 0.3, rise: 0.4, groove: 0.5, deep: 0.45, breakdown: 0.5 },
+      budget: { density: 13, occupancy: 7, smear: 4, joint: 0.9 },
+      drift: { bright: [28, 64, 150], decay: [34, 80], space: [44, 100] },
+      feedback: { base: 0.5, swing: 0.06, min: 0.4, max: 0.6 },
+      throwChance: { groove: 0, deep: 0, rise: 0, breakdown: 0.15 },
+      riser: false,
+      percSlots: [3, 7, 11, 14],
+      percHits: [1, 2],
+      // シーケンス: 1 小節で一回りする 16 分の音型 [位置, 和音の高い方からの順位, 強さ]。途切れず回り、強さで起伏をつける
+      riff: {
+        bars: 1,
+        level: 0.8,
+        shapes: [
+          [[0, 3, 1], [1, 1, 0.55], [2, 2, 0.7], [3, 0, 0.6], [4, 3, 0.9], [5, 1, 0.55], [6, 2, 0.7], [7, 0, 0.6],
+            [8, 3, 1], [9, 1, 0.55], [10, 2, 0.7], [11, 0, 0.6], [12, 4, 0.9], [13, 1, 0.55], [14, 2, 0.7], [15, 0, 0.6]],
+          [[0, 4, 1], [1, 2, 0.55], [2, 0, 0.7], [3, 2, 0.55], [4, 3, 0.9], [5, 1, 0.55], [6, 0, 0.7], [7, 1, 0.55],
+            [8, 4, 1], [9, 2, 0.55], [10, 0, 0.7], [11, 2, 0.55], [12, 3, 0.9], [13, 1, 0.55], [14, 0, 0.8], [15, 1, 0.55]],
+        ],
+      },
+      waves: { periods: [8, 12, 16], chance: 0.4, rise: [48, 80], fall: [80, 120], peak: [0.15, 0.3] },
+      glint: { starts: [0], gaps: [4], range: [57, 81] },
+      sections: {
+        intro: {
+          bars: [8], kickless: true, duck: 0, open: 0.85,
+          stabPool: 'dubSparse', hatStyles: ['sparse'], bassPool: ['offbeat'], glint: 0,
+          cues: [
+            [0, 'waves', 0.5, 2], [0, 'stabs', 0, 0], [0, 'pad', 0.8, 8], [0, 'glints', 0.8, 8],
+            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0, 0], [0, 'perc', 0, 0],
+          ],
+          next: [['rise', 1]],
+        },
+        rise: {
+          bars: [8], kickless: false, duck: 0.1, open: 0.95,
+          stabPool: 'dubSparse', hatStyles: ['sparse'], bassPool: ['offbeat'], glint: 0,
+          cues: [
+            [0, 'kick', 0.7, 8], [0, 'stabs', 0, 0], [0, 'pad', 0.7, 4], [0, 'waves', 0.35, 4],
+            [0, 'glints', 1, 4], [4, 'hats', 0.4, 4], [4, 'bass', 0.8, 4], [0, 'perc', 0, 0],
+          ],
+          next: [['groove', 1]],
+        },
+        groove: {
+          bars: [24, 32, 40], kickless: false, duck: 0.1, open: 1,
+          stabPool: 'dubSparse', hatStyles: ['sparse', 'whisper'], bassPool: ['offbeat', 'sparse'], glint: 0,
+          cues: [
+            [0, 'kick', 0.8, 0], [0, 'bass', 0.85, 0], [0, 'hats', 0.5, 2], [0, 'perc', 0.3, 2],
+            [0, 'stabs', 0, 0], [0, 'glints', 1, 2], [0, 'pad', 0.55, 4], [0, 'waves', 0.3, 4],
+          ],
+          next: [['deep', 0.45], ['breakdown', 0.35], ['groove', 0.2]],
+        },
+        deep: {
+          // シーケンスが遠のき、パッドが広がる
+          bars: [16, 24], kickless: false, duck: 0.08, open: 0.85,
+          stabPool: 'dubSparse', hatStyles: ['sparse'], bassPool: ['offbeat'], glint: 0,
+          cues: [
+            [0, 'kick', 0.75, 0], [0, 'bass', 0.8, 2], [0, 'hats', 0.35, 4], [0, 'perc', 0.2, 4],
+            [0, 'stabs', 0, 0], [0, 'glints', 0.6, 4], [0, 'pad', 0.8, 4], [0, 'waves', 0.4, 4],
+          ],
+          next: [['groove', 0.55], ['breakdown', 0.45]],
+        },
+        breakdown: {
+          bars: [8, 12], kickless: true, duck: 0, open: 1.1,
+          stabPool: 'dubSparse', hatStyles: ['sparse'], bassPool: ['offbeat'], glint: 0,
+          cues: [
+            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0, 2], [0, 'perc', 0, 2],
+            [0, 'stabs', 0, 0], [0, 'glints', 1, 2], [0, 'pad', 0.9, 3], [0, 'waves', 0.5, 4],
+          ],
+          next: [['rise', 0.4], ['groove', 0.6]],
+        },
+      },
+    },
   };
 
   // IDS はすべての WORLD（テストと URL での指定）。VISIBLE はメニューと auto・ランダムな選曲に出す WORLD

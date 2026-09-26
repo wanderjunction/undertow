@@ -55,6 +55,9 @@
 :root[data-world="phase"] { --night: #0c0b08; --haze: #242018; --line-rgb: 236, 228, 206; --glow-rgb: 200, 176, 120; }
 :root[data-world="skank"] { --night: #0c0a04; --haze: #2a2008; --line-rgb: 250, 232, 170; --glow-rgb: 230, 190, 60; }
 :root[data-world="shore"] { --night: #0a0d0c; --haze: #1e2724; --line-rgb: 226, 240, 232; --glow-rgb: 150, 200, 180; }
+:root[data-world="velvet"] { --night: #0e0808; --haze: #261416; --line-rgb: 244, 214, 212; --glow-rgb: 190, 96, 104; }
+:root[data-world="bronze"] { --night: #0d0a05; --haze: #2a200c; --line-rgb: 246, 226, 186; --glow-rgb: 205, 150, 60; }
+:root[data-world="orbit"] { --night: #05060f; --haze: #0f1430; --line-rgb: 210, 220, 255; --glow-rgb: 90, 120, 240; }
 :root[data-world="dust"]  { --night: #0b0a09; --haze: #1f1c19; --line-rgb: 230, 224, 216; --glow-rgb: 168, 158, 146; }
 
 html {

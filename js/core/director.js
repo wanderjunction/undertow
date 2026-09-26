@@ -490,7 +490,7 @@
       const r = this._loopRng;
       const L = this.W.loops;
       return L.layers.map((layer, i) =>
-        prev && !r.chance(L.find) ? prev[i] : { cycle: r.pick(layer.cycles), offset: round(r.range(0, 1)), phase: r.int(0, 15) },
+        prev && !r.chance(L.find) ? prev[i] : { cycle: r.pick(layer.cycles), offset: round(r.range(...(layer.offsets || [0, 1]))), phase: r.int(0, 15) },
       );
     }
 
