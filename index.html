@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400&amp;family=Jost:wght@300;400&amp;display=swap">
 <!-- ?v= は版ごとに上げる（ブラウザが古い CSS / JS を覚えたまま、新しいページだけ読むことがないように） -->
-<link rel="stylesheet" href="style.css?v=1.19">
+<link rel="stylesheet" href="style.css?v=1.20">
 </head>
 <body>
 <canvas id="sea" aria-hidden="true"></canvas>
@@ -48,7 +48,7 @@
   <p class="hint" lang="en"><kbd>space</kbd> play / stop</p>
 </footer>
 
-<p class="version" lang="en">v1.19</p>
+<p class="version" lang="en">v1.20</p>
 
 <button id="about-open" class="about-open" type="button" lang="en" aria-haspopup="dialog">about</button>
 
@@ -78,25 +78,25 @@
       <h3>曲調</h3>
       <dl class="about-worlds">
         <dt lang="en">tide</dt><dd>静かな波の上のダブ・ミニマル。深いエコーの和音が寄せては返す。Undertow の基本</dd>
-        <dt lang="en">drift</dt><dd>漂うアンビエント。柔らかなストリングスがゆっくり膨らみ、ときどき鈴が響く</dd>
         <dt lang="en">echo</dt><dd>ダブテクノ。1 つの和音が深いエコーの中で刻まれ、フィルターがゆっくり開閉する</dd>
-        <dt lang="en">dawn</dt><dd>明け方。澄んだ長調の和音と、木琴のようなきらめき</dd>
-        <dt lang="en">moon</dt><dd>月明かりの水面。澄んだ音が波のように満ちては消える</dd>
-        <dt lang="en">pulse</dt><dd>ミニマル。1 小節の単音のモチーフと、うねる打楽器。乾いたファンク</dd>
-        <dt lang="en">calm</dt><dd>リラクゼーション。遠い鼓動の中で、シンギングボウルが響く</dd>
-        <dt lang="en">glide</dt><dd>滑るように流れる。周期のずれたベースとアルペジオが途切れなく続く</dd>
-        <dt lang="en">fog</dt><dd>霧。拍のない、オルガンのような持続音が一声ずつ重なっていく</dd>
-        <dt lang="en">motor</dt><dd>デトロイト。切ない和音と、前に出る 909 風のドラム</dd>
-        <dt lang="en">click</dt><dd>マイクロハウス。細かく刻んだクリックが軽く跳ねる</dd>
-        <dt lang="en">sunset</dt><dd>夕暮れ（バレアリック）。ナイロンギターが和音の余韻を残す</dd>
-        <dt lang="en">acid</dt><dd>ミニマル・アシッド。303 風のベースが鳴き、滑る</dd>
-        <dt lang="en">phase</dt><dd>ずれていく反復。マリンバのような音が少しずつ模様を変える</dd>
         <dt lang="en">skank</dt><dd>ダブ・ギター。短く刻んだギターを深いエコーへ</dd>
+        <dt lang="en">sunset</dt><dd>夕暮れ（バレアリック）。ナイロンギターが和音の余韻を残す</dd>
+        <dt lang="en">dawn</dt><dd>明け方。澄んだ長調の和音と、木琴のようなきらめき</dd>
+        <dt lang="en">fog</dt><dd>霧。拍のない、オルガンのような持続音が一声ずつ重なっていく</dd>
+        <dt lang="en">drift</dt><dd>漂うアンビエント。柔らかなストリングスがゆっくり膨らみ、ときどき鈴が響く</dd>
+        <dt lang="en">calm</dt><dd>リラクゼーション。遠い鼓動の中で、シンギングボウルが響く</dd>
+        <dt lang="en">moon</dt><dd>月明かりの水面。澄んだ音が波のように満ちては消える</dd>
         <dt lang="en">shore</dt><dd>水辺の箏。揺れる単音が長いエコーに消えていく</dd>
+        <dt lang="en">glide</dt><dd>滑るように流れる。周期のずれたベースとアルペジオが途切れなく続く</dd>
+        <dt lang="en">phase</dt><dd>ずれていく反復。マリンバのような音が少しずつ模様を変える</dd>
+        <dt lang="en">orbit</dt><dd>シーケンサーの宇宙。回り続ける音型が、深いディレイに反射する</dd>
+        <dt lang="en">bronze</dt><dd>ガムランのテクノ。金属のベルが細かく組み合い、ゴングが区切る</dd>
         <dt lang="en">dust</dt><dd>エレクトロニカ。エレピの断片のループが、揺らめきながらずれていく</dd>
         <dt lang="en">velvet</dt><dd>ディープハウス。温かいエレピの和音と、重いスウィング</dd>
-        <dt lang="en">bronze</dt><dd>ガムランのテクノ。金属のベルが細かく組み合い、ゴングが区切る</dd>
-        <dt lang="en">orbit</dt><dd>シーケンサーの宇宙。回り続ける音型が、深いディレイに反射する</dd>
+        <dt lang="en">click</dt><dd>マイクロハウス。細かく刻んだクリックが軽く跳ねる</dd>
+        <dt lang="en">motor</dt><dd>デトロイト。切ない和音と、前に出る 909 風のドラム</dd>
+        <dt lang="en">pulse</dt><dd>ミニマル。1 小節の単音のモチーフと、うねる打楽器。乾いたファンク</dd>
+        <dt lang="en">acid</dt><dd>ミニマル・アシッド。303 風のベースが鳴き、滑る</dd>
       </dl>
       <p class="about-note">テンポは目安の範囲です。再生のたびに、その範囲の中で決まります。</p>
     </div>
@@ -120,25 +120,25 @@
       <h3>Moods</h3>
       <dl class="about-worlds">
         <dt>tide</dt><dd>Dub minimal over quiet waves. Echoing chords come and go. The heart of Undertow</dd>
-        <dt>drift</dt><dd>Floating ambient. Soft strings slowly swell, with a bell now and then</dd>
         <dt>echo</dt><dd>Dub techno. One chord pulses in deep echo as the filter slowly opens and closes</dd>
-        <dt>dawn</dt><dd>Daybreak. Clear major chords and xylophone-like sparkles</dd>
-        <dt>moon</dt><dd>Moonlit water. Pure tones swell and fade like waves</dd>
-        <dt>pulse</dt><dd>Minimal. A one-bar single-note motif over rolling drums. Dry funk</dd>
-        <dt>calm</dt><dd>Relaxation. Singing bowls ring over a distant heartbeat</dd>
-        <dt>glide</dt><dd>Gliding. Out-of-step bass and arpeggios flow on without a break</dd>
-        <dt>fog</dt><dd>Fog. Beatless, organ-like tones gather one voice at a time</dd>
-        <dt>motor</dt><dd>Detroit. Bittersweet chords over up-front 909-style drums</dd>
-        <dt>click</dt><dd>Microhouse. Finely chopped clicks with a light bounce</dd>
-        <dt>sunset</dt><dd>Balearic sunset. A nylon guitar lets its chords ring out</dd>
-        <dt>acid</dt><dd>Minimal acid. A 303-style bassline squelches and slides</dd>
-        <dt>phase</dt><dd>Phasing repetition. Marimba-like notes slowly shift their pattern</dd>
         <dt>skank</dt><dd>Dub guitar. Short guitar chops thrown into deep echo</dd>
+        <dt>sunset</dt><dd>Balearic sunset. A nylon guitar lets its chords ring out</dd>
+        <dt>dawn</dt><dd>Daybreak. Clear major chords and xylophone-like sparkles</dd>
+        <dt>fog</dt><dd>Fog. Beatless, organ-like tones gather one voice at a time</dd>
+        <dt>drift</dt><dd>Floating ambient. Soft strings slowly swell, with a bell now and then</dd>
+        <dt>calm</dt><dd>Relaxation. Singing bowls ring over a distant heartbeat</dd>
+        <dt>moon</dt><dd>Moonlit water. Pure tones swell and fade like waves</dd>
         <dt>shore</dt><dd>Koto by the water. Wavering notes fade into long echoes</dd>
+        <dt>glide</dt><dd>Gliding. Out-of-step bass and arpeggios flow on without a break</dd>
+        <dt>phase</dt><dd>Phasing repetition. Marimba-like notes slowly shift their pattern</dd>
+        <dt>orbit</dt><dd>Sequencer space. A circling pattern echoes through deep delays</dd>
+        <dt>bronze</dt><dd>Gamelan techno. Metallic bells interlock, marked by a gong</dd>
         <dt>dust</dt><dd>Electronica. Loops of electric-piano fragments shimmer and drift apart</dd>
         <dt>velvet</dt><dd>Deep house. Warm electric-piano chords and a heavy swing</dd>
-        <dt>bronze</dt><dd>Gamelan techno. Metallic bells interlock, marked by a gong</dd>
-        <dt>orbit</dt><dd>Sequencer space. A circling pattern echoes through deep delays</dd>
+        <dt>click</dt><dd>Microhouse. Finely chopped clicks with a light bounce</dd>
+        <dt>motor</dt><dd>Detroit. Bittersweet chords over up-front 909-style drums</dd>
+        <dt>pulse</dt><dd>Minimal. A one-bar single-note motif over rolling drums. Dry funk</dd>
+        <dt>acid</dt><dd>Minimal acid. A 303-style bassline squelches and slides</dd>
       </dl>
       <p class="about-note">Tempos are ranges. Each play picks a tempo within the range.</p>
     </div>
@@ -147,14 +147,14 @@
 
 <p id="status" class="visually-hidden" role="status" aria-live="polite"></p>
 
-<script src="js/core/util.js?v=1.19"></script>
-<script src="js/core/rng.js?v=1.19"></script>
-<script src="js/core/content.js?v=1.19"></script>
-<script src="js/core/worlds.js?v=1.19"></script>
-<script src="js/core/director.js?v=1.19"></script>
-<script src="js/audio/patches.js?v=1.19"></script>
-<script src="js/audio/voices.js?v=1.19"></script>
-<script src="js/audio/transport.js?v=1.19"></script>
-<script src="js/app.js?v=1.19"></script>
+<script src="js/core/util.js?v=1.20"></script>
+<script src="js/core/rng.js?v=1.20"></script>
+<script src="js/core/content.js?v=1.20"></script>
+<script src="js/core/worlds.js?v=1.20"></script>
+<script src="js/core/director.js?v=1.20"></script>
+<script src="js/audio/patches.js?v=1.20"></script>
+<script src="js/audio/voices.js?v=1.20"></script>
+<script src="js/audio/transport.js?v=1.20"></script>
+<script src="js/app.js?v=1.20"></script>
 </body>
 </html>

@@ -333,7 +333,12 @@
     changeTide();
   }
   shuffle.addEventListener('click', () => pick(null, null));
-  for (const id of U.worlds.VISIBLE) { // 非表示の WORLD は URL の #名前 でだけ鳴らせる
+  // 画面の並び（5 個で 1 行）: 水とダブ → 静けさ → 模様 → グルーヴ。定義の順番（ランダムな選曲の割り当て）は変えない。
+  // ここに書いていない WORLD は最後に並ぶ。非表示の WORLD は URL の #名前 でだけ鳴らせる
+  const MENU = ['tide', 'echo', 'skank', 'sunset', 'dawn', 'fog', 'drift', 'calm', 'moon', 'shore',
+    'glide', 'phase', 'orbit', 'bronze', 'dust', 'velvet', 'click', 'motor', 'pulse', 'acid'];
+  const menu = MENU.filter((id) => U.worlds.VISIBLE.includes(id)).concat(U.worlds.VISIBLE.filter((id) => !MENU.includes(id)));
+  for (const id of menu) {
     const b = document.createElement('button');
     b.type = 'button';
     b.dataset.world = id;
