@@ -315,6 +315,78 @@ test('アシッドの呼吸（acid）: W.acid.breath の WORLD は、つまみ�
   }
 });
 
+test('ループ（dust）: 層ごとに決まった長さで同じ切り抜きを繰り返し、位置はフレーズの境目でだけ変わる。スタブときらめきは鳴らさない', () => {
+  const loopers = IDS.filter((w) => WORLDS[w].loops);
+  assert.ok(loopers.length > 0);
+  for (const world of loopers) {
+    const W = WORLDS[world];
+    for (const seed of SEEDS.slice(0, 4)) {
+      const { bars } = run(seed, 240, world);
+      let grains = 0;
+      let stutters = 0;
+      const last = W.loops.layers.map(() => null);
+      for (const { plan, state } of bars) {
+        assert.equal(plan.events.filter((e) => e.voice === 'stab' || e.voice === 'glint').length, 0, `${world}: no stabs or glints`);
+        if (plan.bar % 8 === 0) last.fill(null); // フレーズの境目では、ループが変わってもいい
+        for (const e of plan.events.filter((x) => x.voice === 'grain')) {
+          assert.deepEqual(e.notes, state.chord.pad, `${world}: a grain plays the current chord`);
+          if (e.len < 1) {
+            // CD が飛んだような細かい繰り返し（半ステップずつ、短い）
+            assert.equal(plan.bar % 8, 7, `${world}: a skip only at the end of a phrase`);
+            assert.ok(e.step >= 12);
+            stutters++;
+            continue;
+          }
+          const i = W.loops.layers.findIndex((l) => l.pan === e.pan);
+          const lp = state.loops[i];
+          assert.equal(e.offset, lp.offset, `${world}: the loop keeps its position`);
+          const abs = plan.bar * 16 + e.step;
+          if (last[i] !== null && abs - last[i] <= lp.cycle * 2) assert.equal(abs - last[i], lp.cycle, `${world} bar ${plan.bar}: layer ${i} repeats every ${lp.cycle}`);
+          last[i] = abs;
+          grains++;
+        }
+      }
+      assert.ok(grains > 500, `${world}: ${grains} grains`);
+      if (seed === SEEDS[0]) assert.ok(stutters % 8 === 0, `${world}: a skip is 8 short grains`);
+    }
+  }
+});
+
+test('ミニマル（pulse）: 高いキックと低いキックを交互に、スタブは 1 小節の単音のモチーフ', () => {
+  for (const world of IDS.filter((w) => WORLDS[w].kickTune || WORLDS[w].oneBar)) {
+    const W = WORLDS[world];
+    for (const seed of SEEDS.slice(0, 4)) {
+      for (const { plan, state } of run(seed, 200, world).bars) {
+        for (const k of plan.events.filter((e) => e.voice === 'kick')) assert.equal(k.tune, W.kickTune ? W.kickTune[k.step / 4] : undefined);
+        const shift = W.stabShift ? W.stabShift[plan.bar % W.stabShift.length] : 0;
+        for (const e of plan.events.filter((x) => x.voice === 'stab')) {
+          if (W.voicing === 'mono') assert.equal(e.notes.length, 1, `${world}: a single note`);
+          if (W.oneBar) assert.ok(state.parts.stabs.a.map((x) => (x + shift) % 16).includes(Math.floor(e.step)), `${world} bar ${plan.bar}: the same one-bar motif`);
+        }
+      }
+    }
+  }
+});
+
+test('ライドの確率（drift のトライアングル）: rideChance の WORLD は、決めた位置でまれにだけ鳴らす。持たない WORLD は毎小節', () => {
+  for (const world of IDS.filter((w) => WORLDS[w].ride)) {
+    const W = WORLDS[world];
+    let chances = 0;
+    let hits = 0;
+    for (const seed of SEEDS.slice(0, 6)) {
+      for (const { plan, state } of run(seed, 300, world).bars) {
+        const rides = plan.events.filter((e) => e.ride);
+        for (const e of rides) assert.ok(W.ride.some(([st]) => st === Math.floor(e.step)), `${world}: ride at ${e.step}`);
+        const open = W.ride.filter(([st]) => rampAt(state.levels.hats, plan.bar + st / 16) >= 0.02).length;
+        if (!W.rideChance) assert.equal(rides.length, open, `${world} bar ${plan.bar}: every bar`);
+        chances += open;
+        hits += rides.length;
+      }
+    }
+    if (W.rideChance) assert.ok(hits > chances * W.rideChance * 0.5 && hits < chances * W.rideChance * 1.6, `${world}: ${hits}/${chances}`);
+  }
+});
+
 test('状態の書き手は Director だけ: 状態もプランも凍結されている', () => {
   const d = new Director({ seed: 7 });
   const plan = d.nextBar();

@@ -205,6 +205,47 @@
     return quantizeCurves.get(bits);
   }
 
+  // 和音の断片（dust）: ジャズのレコードの一瞬のような、エレピの和音。FM（1:1）で、弾いた瞬間は明るく、すぐ丸くなる。
+  // 音ごとに少しずつずらして弾き（strum）、テープのような揺れ（wow）、ブラシのようなノイズ、古いレコードのような高域の丸さ（lp）。
+  // 和音ごとに一度だけ計算して使い回す（録音ではない）。3 kHz より上をほとんど持たないので、半分のサンプルレートで作って計算を節約する
+  function fragmentBuffer(ctx, notes, G, r) {
+    const sr = ctx.sampleRate / 2;
+    const len = Math.floor(sr * G.seconds);
+    const buf = ctx.createBuffer(1, len, sr);
+    const d = buf.getChannelData(0);
+    const step = (tau) => Math.exp(-1 / (sr * tau)); // 1 サンプルごとに掛ける減衰
+    notes.forEach((n, k) => {
+      const f = mtof(n);
+      const start = Math.floor(sr * (k * G.strum + r.range(0, G.strum * 0.5)));
+      const [kAtt, kDec, kIdx, kTine] = [step(0.004), step(G.decay), step(G.indexTau), step(G.tine[2])];
+      let att = 1;
+      let dec = 1;
+      let idx = 1;
+      let tine = 1;
+      let ph = 0;
+      for (let i = start; i < len; i++) {
+        const t = (i - start) / sr;
+        ph += (2 * Math.PI * f * (1 + G.wow[1] * Math.sin(2 * Math.PI * G.wow[0] * t))) / sr;
+        const index = G.index[1] + (G.index[0] - G.index[1]) * idx;
+        d[i] += ((1 - att) * dec * (Math.sin(ph + index * Math.sin(ph)) + G.tine[1] * tine * Math.sin(ph * G.tine[0]))) / notes.length;
+        att *= kAtt;
+        dec *= kDec;
+        idx *= kIdx;
+        tine *= kTine;
+      }
+    });
+    const a = 1 - Math.exp((-2 * Math.PI * G.lp) / sr);
+    const kBrush = step(0.5);
+    let brush = G.brush;
+    let y = 0;
+    for (let i = 0; i < len; i++) {
+      y += a * (d[i] + brush * (r.next() * 2 - 1) - y);
+      d[i] = y;
+      brush *= kBrush;
+    }
+    return buf;
+  }
+
   function tanhCurve() {
     const n = 2048;
     const c = new Float32Array(n);
@@ -274,7 +315,7 @@
     });
   }
 
-  const VOICES = { kick: 1, bass: 1, hat: 1, perc: 1, clap: 1, stab: 1, glint: 1, wave: 1 };
+  const VOICES = { kick: 1, bass: 1, hat: 1, perc: 1, clap: 1, stab: 1, glint: 1, wave: 1, grain: 1 };
 
   // ---------------------------------------------------------------------------
   // Voices
@@ -384,7 +425,7 @@
       const clip = ctx.createWaveShaper();
       clip.curve = softClip();
       clip.oversample = '2x';
-      this.mix = this._gain(1);
+      this.mix = this._gain(M.trim || 1); // trim: 曲調ごとの全体の大きさ（曲調どうしの聴感の大きさをそろえる）
       chain(this.mix, this._filter('highpass', MASTER.lowCut, 0.5), limiter, clip, this.fadeIn, this.out);
 
       // キックに合わせて呼吸する音楽バス（キックとベース以外が通る）
@@ -645,7 +686,7 @@
         if (e.duck > 0.02) this._duck(t, e.duck);
         return;
       }
-      const hz = mtof(this.id.kickNote);
+      const hz = mtof(this.id.kickNote + (e.tune || 0)); // tune（pulse）: 拍ごとに高いキックと低いキック
       const p = e.presence;
       const o = ctx.createOscillator();
       o.frequency.setValueAtTime(hz * K.sweep, t);
@@ -813,6 +854,7 @@
 
     // ライド（909 風、motor）: 金属の響きを低めの帯域で通し、長く「チーン」と伸ばす。ハットのチョークとは関係しない
     _ride(e, t, D) {
+      if (D.tone) return this._chime(e, t, D);
       const ctx = this.ctx;
       let src = ctx.createBufferSource();
       src.buffer = this._buffer('metal');
@@ -824,8 +866,30 @@
       amp.gain.setTargetAtTime(0, t + 0.0015, D.decay);
       const pk = this._filter('peaking', D.pk, 1.5);
       pk.gain.value = 6;
-      src.connect(this._filter('highpass', D.hp, 0.7)).connect(this._filter('highpass', D.hp, 0.7)).connect(pk).connect(amp).connect(this._panner(e.pan)).connect(this.hatBus);
+      const out = src.connect(this._filter('highpass', D.hp, 0.7)).connect(this._filter('highpass', D.hp, 0.7)).connect(pk).connect(amp).connect(this._panner(e.pan));
+      out.connect(this.hatBus);
+      if (D.verb) this._send(out, D.verb, this.verb); // verb（drift のトライアングル）: ハットとは別に、残響へ多めに送る
       source.start(t, this.r.range(0, 1.9 - D.len), D.len);
+    }
+
+    // 澄んだ鈴（drift）: 金属の響きの代わりに、整数にならない比の倍音を数本だけ重ねた、きれいな「チーン」。
+    // tone = [倍率, 量, 減衰] の並び（高い倍音ほど早く消える）。音程はキーの根音か 5 度（percNote）の octave 半音上
+    _chime(e, t, D) {
+      const f = mtof(this.id.percNote + D.octave);
+      const out = this._panner(e.pan);
+      out.connect(this.hatBus);
+      if (D.verb) this._send(out, D.verb, this.verb);
+      for (const [ratio, amount, decay] of D.tone) {
+        const o = this.ctx.createOscillator();
+        o.frequency.value = f * ratio;
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(e.vel * D.level * amount, t + 0.002);
+        g.gain.setTargetAtTime(0, t + 0.003, decay);
+        o.connect(g).connect(out);
+        o.start(t);
+        o.stop(t + decay * 8);
+      }
     }
 
     _perc(e, t) {
@@ -876,6 +940,37 @@
         .connect(amp)
         .connect(this.percBus);
       src.start(t, this.r.range(0, 1.9 - C.len), C.len);
+    }
+
+    // ループの一片（dust）: 和音の断片（fragmentBuffer）から、offset の位置を len ステップぶん切り出して鳴らす。
+    // 切り口は edge 秒でわずかに丸めるだけなので、少し「プツッ」と鳴る（切れ目の荒さがリズムになる）
+    _grain(e, t) {
+      const G = this.P.stab.grain;
+      const buf = this._fragment(e.notes, G);
+      const dur = Math.max(G.edge * 2, e.len * this.stepDur);
+      const src = this.ctx.createBufferSource();
+      src.buffer = buf;
+      src.playbackRate.value = e.rate || 1;
+      const amp = this.ctx.createGain();
+      const peak = e.vel * G.level;
+      amp.gain.setValueAtTime(0, t);
+      amp.gain.linearRampToValueAtTime(peak, t + G.edge);
+      amp.gain.setValueAtTime(peak, t + dur - G.edge);
+      amp.gain.linearRampToValueAtTime(0, t + dur);
+      src.connect(amp).connect(this._panner(e.pan)).connect(this.stabBus);
+      src.start(t, e.offset * Math.max(0, buf.duration - dur * (e.rate || 1) - 0.01));
+      src.stop(t + dur + 0.01);
+    }
+
+    // 和音ごとの断片は一度だけ作って使い回す（新しい和音が 12 を超えたら、古いものから捨てる）
+    _fragment(notes, G) {
+      const key = notes.join(',');
+      if (!this.fragments) this.fragments = new Map();
+      if (!this.fragments.has(key)) {
+        this.fragments.set(key, fragmentBuffer(this.ctx, notes, G, derive(0xd057, 'fragment:' + key)));
+        if (this.fragments.size > 12) this.fragments.delete(this.fragments.keys().next().value);
+      }
+      return this.fragments.get(key);
     }
 
     // 和音を一瞬だけ開くスタブ。波形・レゾナンス・減衰はパッチ次第

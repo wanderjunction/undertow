@@ -97,13 +97,16 @@
       percSlots: [6, 11, 14],
       percHits: [1, 2],
       waves: { periods: [4, 5, 7], chance: 0.8, rise: [32, 48], fall: [48, 80], peak: [0.3, 0.8] },
-      glint: { starts: [0, 2, 4, 8], gaps: [4, 6, 8], range: [72, 88] },
+      glint: { starts: [0, 6, 10], gaps: [16], range: [62, 77] },
+      // 澄んだ鈴: 小節の 3 拍目の裏で、ごくまれに（1 小節に 1 回の機会、8 % で）
+      ride: [[10, 0.8]],
+      rideChance: 0.08, // アクセント: 1 小節に 1 音まで（次の音は小節の外）、中音域
       sections: {
         intro: {
           bars: [8], kickless: true, duck: 0, open: 0.8,
           stabPool: 'drift', hatStyles: ['breath'], bassPool: ['swell'], glint: 0.6,
           cues: [
-            [0, 'waves', 0.8, 4], [0, 'pad', 1, 6], [0, 'stabs', 0.5, 6], [0, 'glints', 0.7, 4],
+            [0, 'waves', 0.8, 4], [0, 'pad', 1, 6], [0, 'stabs', 0.5, 6], [0, 'glints', 0.5, 4],
             [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0, 0], [0, 'perc', 0, 0],
             [4, 'kick', 0.15, 4],
           ],
@@ -114,7 +117,7 @@
           stabPool: 'drift', hatStyles: ['breath'], bassPool: ['swell'], glint: 0.5,
           cues: [
             [0, 'kick', 0.4, 8], [0, 'stabs', 0.6, 4], [0, 'pad', 1, 4], [0, 'waves', 0.6, 8],
-            [0, 'glints', 0.6, 4], [2, 'hats', 0.4, 6], [4, 'bass', 0.7, 4], [4, 'perc', 0.3, 4],
+            [0, 'glints', 0.5, 4], [2, 'hats', 0.4, 6], [4, 'bass', 0.7, 4], [4, 'perc', 0.3, 4],
           ],
           next: [['groove', 1]],
         },
@@ -123,7 +126,7 @@
           stabPool: 'drift', hatStyles: ['breath', 'whisper'], bassPool: ['swell', 'sparse'], glint: 0.5,
           cues: [
             [0, 'kick', 0.45, 2], [0, 'bass', 0.75, 2], [0, 'hats', 0.55, 4], [0, 'perc', 0.4, 4],
-            [0, 'stabs', 0.7, 4], [0, 'pad', 1, 4], [0, 'waves', 0.5, 4], [0, 'glints', 0.6, 4],
+            [0, 'stabs', 0.7, 4], [0, 'pad', 1, 4], [0, 'waves', 0.5, 4], [0, 'glints', 0.5, 4],
           ],
           next: [['deep', 0.45], ['breakdown', 0.4], ['groove', 0.15]],
         },
@@ -132,7 +135,7 @@
           stabPool: 'drift', hatStyles: ['breath'], bassPool: ['swell'], glint: 0.6,
           cues: [
             [0, 'kick', 0.3, 2], [0, 'bass', 0.6, 2], [0, 'hats', 0.3, 4], [0, 'perc', 0.2, 4],
-            [0, 'stabs', 0.5, 4], [0, 'pad', 1, 4], [0, 'waves', 0.6, 4], [0, 'glints', 0.7, 4],
+            [0, 'stabs', 0.5, 4], [0, 'pad', 1, 4], [0, 'waves', 0.6, 4], [0, 'glints', 0.5, 4],
           ],
           next: [['groove', 0.5], ['breakdown', 0.5]],
         },
@@ -141,24 +144,28 @@
           stabPool: 'drift', hatStyles: ['breath'], bassPool: ['swell'], glint: 0.7,
           cues: [
             [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0.15, 2], [0, 'perc', 0, 2],
-            [0, 'stabs', 0.6, 2], [0, 'pad', 1, 3], [0, 'waves', 0.8, 4], [0, 'glints', 0.9, 2],
+            [0, 'stabs', 0.6, 2], [0, 'pad', 1, 3], [0, 'waves', 0.8, 4], [0, 'glints', 0.5, 4],
           ],
           next: [['rise', 0.6], ['groove', 0.4]],
         },
       },
     },
 
-    // ダブ寄り。深いテープ・エコーにスタブとリムショットを投げ込み、太いベースで支える
+    // ダブテクノ。1 つの和音（根音を抜いた短 9・短 11）をほぼ動かさず、1 小節の同じ形で刻み続け、フィルターが 16 小節かけて
+    // 大きく開け閉めする。深いテープ・エコーとヒス。きらめきは鳴らさない（tide は波の上のダブ、echo はエコーの部屋の中の和音）
     echo: {
       label: 'echo',
-      bpm: [112, 118],
+      bpm: [118, 124],
       swing: [0.06, 0.12],
       delaySteps: 3,
-      progressions: { ids: ['still', 'i-iv', 'i-v', 'i-VII'], bars: [8, 16] },
+      voicing: 'rootless',
+      oneBar: true,
+      sweep: { bars: 16, depth: 0.42 },
+      progressions: { ids: ['still', 'dust-still'], bars: [16] }, // 和音はほぼ動かない（短 9 か短 11 のまま）
       changeChance: { intro: 0.3, rise: 0.4, groove: 0.55, deep: 0.45, breakdown: 0.5 },
       budget: { density: 11, occupancy: 6.2, smear: 3.8, joint: 0.8 },
       drift: { bright: [23, 56, 128], decay: [30, 74], space: [36, 88] },
-      feedback: { base: 0.62, swing: 0.05, min: 0.5, max: 0.74 },
+      feedback: { base: 0.66, swing: 0.05, min: 0.54, max: 0.76 },
       throwChance: { groove: 0.5, deep: 0.45, rise: 0.3, breakdown: 0.7 },
       riser: true,
       percSlots: [3, 5, 7, 11, 13, 14, 15],
@@ -170,7 +177,7 @@
           bars: [4], kickless: true, duck: 0, open: 0.9,
           stabPool: 'dubSparse', hatStyles: ['sparse'], bassPool: ['offbeat'], glint: 0.2,
           cues: [
-            [0, 'waves', 0.6, 2], [0, 'pad', 0.4, 4], [0, 'stabs', 0.7, 2], [0, 'glints', 0.3, 4],
+            [0, 'waves', 0.6, 2], [0, 'pad', 0.25, 4], [0, 'stabs', 0.7, 2], [0, 'glints', 0, 0],
             [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0, 0], [0, 'perc', 0.3, 2],
             [2, 'kick', 0.22, 2],
           ],
@@ -180,8 +187,8 @@
           bars: [8], kickless: false, duck: 0.3, open: 0.95,
           stabPool: 'dub', hatStyles: ['open'], bassPool: ['offbeat', 'dub'], glint: 0.2,
           cues: [
-            [0, 'kick', 1, 8], [0, 'stabs', 0.9, 4], [0, 'pad', 0.4, 8], [0, 'waves', 0.45, 8],
-            [0, 'glints', 0.25, 4], [2, 'hats', 0.5, 6], [4, 'bass', 0.95, 4], [0, 'perc', 0.6, 4],
+            [0, 'kick', 1, 8], [0, 'stabs', 0.9, 4], [0, 'pad', 0.25, 8], [0, 'waves', 0.45, 8],
+            [0, 'glints', 0, 0], [2, 'hats', 0.5, 6], [4, 'bass', 0.95, 4], [0, 'perc', 0.6, 4],
           ],
           next: [['groove', 1]],
         },
@@ -190,7 +197,7 @@
           stabPool: 'dub', hatStyles: ['open', 'sparse'], bassPool: ['dub', 'offbeat'], glint: 0.2,
           cues: [
             [0, 'kick', 1, 0], [0, 'bass', 1, 0], [0, 'hats', 0.8, 2], [0, 'perc', 0.9, 2],
-            [0, 'stabs', 1, 2], [0, 'pad', 0.35, 4], [0, 'waves', 0.35, 4], [0, 'glints', 0.3, 4],
+            [0, 'stabs', 1, 2], [0, 'pad', 0.2, 4], [0, 'waves', 0.35, 4], [0, 'glints', 0, 0],
           ],
           next: [['deep', 0.45], ['breakdown', 0.4], ['groove', 0.15]],
         },
@@ -199,7 +206,7 @@
           stabPool: 'dubSparse', hatStyles: ['sparse'], bassPool: ['dub', 'offbeat'], glint: 0.25,
           cues: [
             [0, 'kick', 1, 0], [0, 'bass', 0.95, 2], [0, 'hats', 0.45, 4], [0, 'perc', 0.6, 4],
-            [0, 'stabs', 0.8, 4], [0, 'pad', 0.5, 4], [0, 'waves', 0.45, 4], [0, 'glints', 0.35, 4],
+            [0, 'stabs', 0.8, 4], [0, 'pad', 0.3, 4], [0, 'waves', 0.45, 4], [0, 'glints', 0, 0],
           ],
           next: [['groove', 0.5], ['breakdown', 0.5]],
         },
@@ -208,7 +215,7 @@
           stabPool: 'dub', hatStyles: ['sparse'], bassPool: ['offbeat'], glint: 0.3,
           cues: [
             [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0.2, 2], [0, 'perc', 0.5, 2],
-            [0, 'stabs', 1, 2], [0, 'pad', 0.5, 3], [0, 'waves', 0.5, 4], [0, 'glints', 0.4, 2],
+            [0, 'stabs', 1, 2], [0, 'pad', 0.3, 3], [0, 'waves', 0.5, 4], [0, 'glints', 0, 0],
           ],
           next: [['rise', 0.4], ['groove', 0.6]],
         },
@@ -352,203 +359,78 @@
       },
     },
 
-    // うねり。いちばんテクノ寄り。16分のハットと細かく動くベース、乾いた短い和音
+    // ミニマル（Robert Hood の Minimal Nation のような）。主役は 1 小節の単音のモチーフ（SH-101 風）で、間を大事にして
+    // 延々と繰り返し、フィルターのつまみだけがゆっくり動く。高いキックと低いキックが交互に鳴り、刻むハットとタムのループがうねる。
+    // 和音・パッド・きらめきは鳴らさず、残響もほとんどない。グルーヴに入り込んで、それを続ける
     pulse: {
       label: 'pulse',
-      bpm: [122, 126],
-      swing: [0.04, 0.1],
+      bpm: [130, 134],
+      swing: [0.06, 0.12],
       delaySteps: 3,
-      progressions: { ids: ['still', 'i-iv', 'i-v', 'i-VII'], bars: [8, 16] },
-      changeChance: { intro: 0.35, rise: 0.45, groove: 0.65, deep: 0.5, breakdown: 0.5 },
-      budget: { density: 13, occupancy: 4.6, smear: 2.4, joint: 0.8 },
+      voicing: 'mono',
+      oneBar: true,
+      kickTune: [0, 3, 0, 3],
+      progressions: { ids: ['still', 'i-VII', 'i-iv'], bars: [16] },
+      changeChance: { intro: 0.3, rise: 0.4, groove: 0.5, deep: 0.45, breakdown: 0.5 },
+      budget: { density: 17, occupancy: 7, smear: 6, joint: 0.9 }, // 16 分のハット、タムのループ、5〜6 打のモチーフのぶん余裕を持たせる（単音のスタブは短い）
       drift: { bright: [20, 48, 120], decay: [28, 64], space: [34, 80] },
-      feedback: { base: 0.4, swing: 0.06, min: 0.3, max: 0.56 },
-      throwChance: { groove: 0.2, deep: 0.2, rise: 0.15, breakdown: 0.35 },
-      riser: true,
-      percSlots: [3, 5, 7, 9, 11, 13, 15],
-      percHits: [2, 4],
-      waves: { periods: [4, 5, 6], chance: 0.5, rise: [16, 28], fall: [28, 44], peak: [0.2, 0.5] },
+      feedback: { base: 0.3, swing: 0.05, min: 0.22, max: 0.4 },
+      throwChance: { groove: 0, deep: 0, rise: 0, breakdown: 0 },
+      riser: false,
+      percSlots: [3, 7, 11, 14],
+      percHits: [2, 3],
+      // タム: キックと重ならない位置に、2 小節の決まった形で
+      percLoop: [[3, 0.7], [7, 0.55], [11, 0.8], [14, 0.6], [19, 0.7], [23, 0.55], [26, 0.8], [30, 0.6], [31, 0.5]],
+      sweep: { bars: 12, depth: 0.32 }, // モチーフのフィルターを 12 小節で一回り
+      waves: { periods: [4, 5, 6], chance: 0.4, rise: [16, 28], fall: [28, 44], peak: [0.15, 0.35] },
       glint: { starts: [2, 6, 10, 14], gaps: [2, 4], range: [74, 91] },
       sections: {
         intro: {
-          bars: [4], kickless: true, duck: 0, open: 0.9,
-          stabPool: 'sparse', hatStyles: ['sixteenths'], bassPool: ['offbeat'], glint: 0.2,
+          bars: [4], kickless: true, duck: 0, open: 0.85,
+          stabPool: 'hood', hatStyles: ['sixteenths'], bassPool: ['offbeat'], glint: 0,
           cues: [
-            [0, 'waves', 0.4, 2], [0, 'pad', 0.6, 2], [0, 'stabs', 0.6, 2], [0, 'glints', 0.3, 2],
-            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0.3, 2], [0, 'perc', 0, 0],
-            [2, 'kick', 0.3, 2],
+            [0, 'waves', 0.3, 2], [0, 'pad', 0, 0], [0, 'stabs', 0.6, 4], [0, 'glints', 0, 0],
+            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0.4, 2], [0, 'perc', 0, 0],
+            [2, 'kick', 0.4, 2],
           ],
           next: [['rise', 1]],
         },
         rise: {
-          bars: [8], kickless: false, duck: 0.35, open: 1,
-          stabPool: 'full', hatStyles: ['sixteenths'], bassPool: ['offbeat', 'rolling'], glint: 0.2,
+          bars: [8], kickless: false, duck: 0.2, open: 0.95,
+          stabPool: 'hood', hatStyles: ['detroit16'], bassPool: ['offbeat'], glint: 0,
           cues: [
-            [0, 'kick', 1, 6], [0, 'stabs', 0.9, 4], [0, 'pad', 0.5, 8], [0, 'waves', 0.3, 8],
-            [0, 'glints', 0.3, 4], [0, 'hats', 0.8, 6], [2, 'bass', 1, 4], [2, 'perc', 0.6, 4],
+            [0, 'kick', 1, 4], [0, 'stabs', 0.85, 4], [0, 'pad', 0, 0], [0, 'waves', 0.2, 8],
+            [0, 'glints', 0, 0], [0, 'hats', 0.85, 4], [4, 'bass', 0.9, 4], [2, 'perc', 0.7, 4],
           ],
           next: [['groove', 1]],
         },
         groove: {
-          bars: [24, 32, 40], kickless: false, duck: 0.5, open: 1.05,
-          stabPool: 'full', hatStyles: ['sixteenths', 'open'], bassPool: ['rolling', 'ghost', 'offbeat'], glint: 0.15,
+          bars: [32, 40, 48], kickless: false, duck: 0.25, open: 1,
+          stabPool: 'hood', hatStyles: ['detroit16', 'sixteenths', 'open'], bassPool: ['offbeat', 'ghost'], glint: 0,
           cues: [
-            [0, 'kick', 1, 0], [0, 'bass', 1, 0], [0, 'hats', 1, 2], [0, 'perc', 0.85, 2],
-            [0, 'stabs', 1, 2], [0, 'pad', 0.4, 4], [0, 'waves', 0.25, 4], [0, 'glints', 0.25, 4],
+            [0, 'kick', 1, 0], [0, 'bass', 1, 0], [0, 'hats', 1, 2], [0, 'perc', 0.9, 2],
+            [0, 'stabs', 1, 2], [0, 'pad', 0, 0], [0, 'waves', 0.15, 4], [0, 'glints', 0, 0],
           ],
-          next: [['deep', 0.45], ['breakdown', 0.35], ['groove', 0.2]],
+          next: [['deep', 0.5], ['breakdown', 0.25], ['groove', 0.25]],
         },
         deep: {
-          bars: [16, 24], kickless: false, duck: 0.45, open: 0.85,
-          stabPool: 'sparse', hatStyles: ['sixteenths'], bassPool: ['rolling', 'offbeat'], glint: 0.2,
+          // モチーフが引いて、打楽器だけのうねりになる
+          bars: [16, 24], kickless: false, duck: 0.2, open: 0.8,
+          stabPool: 'hood', hatStyles: ['detroit16', 'sixteenths'], bassPool: ['offbeat', 'rolling'], glint: 0,
           cues: [
-            [0, 'kick', 1, 0], [0, 'bass', 1, 2], [0, 'hats', 0.8, 4], [0, 'perc', 0.6, 4],
-            [0, 'stabs', 0.7, 4], [0, 'pad', 0.55, 4], [0, 'waves', 0.3, 4], [0, 'glints', 0.3, 4],
+            [0, 'kick', 1, 0], [0, 'bass', 1, 2], [0, 'hats', 0.9, 4], [0, 'perc', 1, 4],
+            [0, 'stabs', 0.45, 4], [0, 'pad', 0, 0], [0, 'waves', 0.2, 4], [0, 'glints', 0, 0],
           ],
-          next: [['groove', 0.6], ['breakdown', 0.4]],
+          next: [['groove', 0.65], ['breakdown', 0.35]],
         },
         breakdown: {
-          bars: [8], kickless: true, duck: 0, open: 1.3,
-          stabPool: 'full', hatStyles: ['sparse'], bassPool: ['offbeat'], glint: 0.3,
+          bars: [4, 8], kickless: true, duck: 0, open: 1.2,
+          stabPool: 'hood', hatStyles: ['sparse'], bassPool: ['offbeat'], glint: 0,
           cues: [
-            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0.35, 2], [0, 'perc', 0.2, 2],
-            [0, 'stabs', 0.9, 2], [0, 'pad', 0.8, 3], [0, 'waves', 0.5, 4], [0, 'glints', 0.4, 2],
+            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0.4, 2], [0, 'perc', 0.3, 2],
+            [0, 'stabs', 1, 2], [0, 'pad', 0, 0], [0, 'waves', 0.35, 4], [0, 'glints', 0, 0],
           ],
           next: [['rise', 0.3], ['groove', 0.7]],
-        },
-      },
-    },
-
-    // ガラス。透明で冷たい。高い短い音が主役で、低音は細く、空間は広い
-    glass: {
-      label: 'glass',
-      bpm: [118, 122],
-      swing: [0.02, 0.06],
-      delaySteps: 3,
-      progressions: { ids: ['still', 'i-VI', 'i-VII', 'wander'], bars: [8, 16] },
-      changeChance: { intro: 0.3, rise: 0.4, groove: 0.6, deep: 0.45, breakdown: 0.5 },
-      budget: { density: 12, occupancy: 5, smear: 2.8, joint: 0.8 },
-      drift: { bright: [24, 58, 136], decay: [32, 78], space: [40, 96] },
-      feedback: { base: 0.52, swing: 0.06, min: 0.4, max: 0.66 },
-      throwChance: { groove: 0.25, deep: 0.25, rise: 0.15, breakdown: 0.45 },
-      riser: false,
-      percSlots: [1, 3, 5, 7, 9, 11, 13, 15],
-      percHits: [2, 4],
-      waves: { periods: [3, 5, 7], chance: 0.6, rise: [16, 28], fall: [28, 48], peak: [0.2, 0.55] },
-      glint: { starts: [0, 1, 3, 5, 6, 9, 11], gaps: [1, 2, 3], range: [84, 100] },
-      sections: {
-        intro: {
-          bars: [4], kickless: true, duck: 0, open: 1,
-          stabPool: 'sparse', hatStyles: ['sparse'], bassPool: ['sparse'], glint: 0.7,
-          cues: [
-            [0, 'waves', 0.6, 2], [0, 'pad', 0.8, 4], [0, 'stabs', 0.5, 4], [0, 'glints', 0.8, 2],
-            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0, 0], [0, 'perc', 0.3, 2],
-            [2, 'kick', 0.25, 2],
-          ],
-          next: [['rise', 1]],
-        },
-        rise: {
-          bars: [8], kickless: false, duck: 0.3, open: 1.05,
-          stabPool: 'sparse', hatStyles: ['sparse'], bassPool: ['sparse'], glint: 0.6,
-          cues: [
-            [0, 'kick', 1, 8], [0, 'stabs', 0.7, 4], [0, 'pad', 0.7, 8], [0, 'waves', 0.5, 8],
-            [0, 'glints', 0.8, 4], [2, 'hats', 0.6, 6], [4, 'bass', 0.8, 4], [0, 'perc', 0.6, 4],
-          ],
-          next: [['groove', 1]],
-        },
-        groove: {
-          bars: [24, 32, 40], kickless: false, duck: 0.4, open: 1.15,
-          stabPool: 'sparse', hatStyles: ['sparse', 'whisper'], bassPool: ['sparse', 'offbeat'], glint: 0.6,
-          cues: [
-            [0, 'kick', 1, 0], [0, 'bass', 0.85, 0], [0, 'hats', 0.9, 2], [0, 'perc', 0.9, 2],
-            [0, 'stabs', 0.7, 2], [0, 'pad', 0.6, 4], [0, 'waves', 0.4, 4], [0, 'glints', 0.8, 4],
-          ],
-          next: [['deep', 0.45], ['breakdown', 0.4], ['groove', 0.15]],
-        },
-        deep: {
-          bars: [16, 24], kickless: false, duck: 0.35, open: 0.95,
-          stabPool: 'sparse', hatStyles: ['whisper'], bassPool: ['sparse'], glint: 0.7,
-          cues: [
-            [0, 'kick', 1, 0], [0, 'bass', 0.7, 2], [0, 'hats', 0.6, 4], [0, 'perc', 0.7, 4],
-            [0, 'stabs', 0.5, 4], [0, 'pad', 0.8, 4], [0, 'waves', 0.5, 4], [0, 'glints', 0.9, 4],
-          ],
-          next: [['groove', 0.5], ['breakdown', 0.5]],
-        },
-        breakdown: {
-          bars: [8, 12], kickless: true, duck: 0, open: 1.3,
-          stabPool: 'sparse', hatStyles: ['sparse'], bassPool: ['sparse'], glint: 0.8,
-          cues: [
-            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0.25, 2], [0, 'perc', 0.4, 2],
-            [0, 'stabs', 0.6, 2], [0, 'pad', 1, 3], [0, 'waves', 0.7, 4], [0, 'glints', 1, 2],
-          ],
-          next: [['rise', 0.5], ['groove', 0.5]],
-        },
-      },
-    },
-
-    // 深海。drift より重く暗い。低いドローンとゆっくり開く響きだけの世界
-    deep: {
-      label: 'deep',
-      bpm: [100, 106],
-      swing: [0.02, 0.05],
-      delaySteps: 6,
-      progressions: { ids: ['still', 'i-VI', 'i-iv'], bars: [16] },
-      changeChance: { intro: 0.2, rise: 0.25, groove: 0.4, deep: 0.3, breakdown: 0.35 },
-      budget: { density: 6, occupancy: 8, smear: 5, joint: 0.8 },
-      drift: { bright: [48, 110, 240], decay: [60, 140], space: [70, 160] },
-      feedback: { base: 0.44, swing: 0.05, min: 0.34, max: 0.56 },
-      throwChance: { groove: 0.08, deep: 0.08, rise: 0, breakdown: 0.12 },
-      riser: false,
-      percSlots: [6, 14],
-      percHits: [1, 2],
-      waves: { periods: [5, 7, 9], chance: 0.8, rise: [40, 64], fall: [64, 96], peak: [0.35, 0.9] },
-      glint: { starts: [0, 4, 8], gaps: [6, 8], range: [67, 84] },
-      sections: {
-        intro: {
-          bars: [8], kickless: true, duck: 0, open: 0.7,
-          stabPool: 'drift', hatStyles: ['breath'], bassPool: ['swell'], glint: 0.4,
-          cues: [
-            [0, 'waves', 1, 4], [0, 'pad', 1, 8], [0, 'stabs', 0.4, 8], [0, 'glints', 0.4, 6],
-            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0, 0], [0, 'perc', 0, 0],
-            [4, 'kick', 0.12, 4],
-          ],
-          next: [['rise', 1]],
-        },
-        rise: {
-          bars: [8], kickless: false, duck: 0.08, open: 0.8,
-          stabPool: 'drift', hatStyles: ['breath'], bassPool: ['swell'], glint: 0.4,
-          cues: [
-            [0, 'kick', 0.35, 8], [0, 'stabs', 0.5, 4], [0, 'pad', 1, 4], [0, 'waves', 0.9, 8],
-            [0, 'glints', 0.5, 4], [4, 'hats', 0.25, 4], [4, 'bass', 0.8, 4], [4, 'perc', 0.25, 4],
-          ],
-          next: [['groove', 1]],
-        },
-        groove: {
-          bars: [32, 48], kickless: false, duck: 0.1, open: 0.85,
-          stabPool: 'drift', hatStyles: ['breath'], bassPool: ['swell', 'sparse'], glint: 0.4,
-          cues: [
-            [0, 'kick', 0.4, 2], [0, 'bass', 0.9, 2], [0, 'hats', 0.35, 4], [0, 'perc', 0.35, 4],
-            [0, 'stabs', 0.55, 4], [0, 'pad', 1, 4], [0, 'waves', 0.8, 4], [0, 'glints', 0.5, 4],
-          ],
-          next: [['deep', 0.5], ['breakdown', 0.35], ['groove', 0.15]],
-        },
-        deep: {
-          bars: [24, 32], kickless: false, duck: 0.06, open: 0.7,
-          stabPool: 'drift', hatStyles: ['breath'], bassPool: ['swell'], glint: 0.5,
-          cues: [
-            [0, 'kick', 0.25, 4], [0, 'bass', 0.8, 2], [0, 'hats', 0.2, 4], [0, 'perc', 0.2, 4],
-            [0, 'stabs', 0.4, 4], [0, 'pad', 1, 4], [0, 'waves', 1, 4], [0, 'glints', 0.6, 4],
-          ],
-          next: [['groove', 0.5], ['breakdown', 0.5]],
-        },
-        breakdown: {
-          bars: [12, 16], kickless: true, duck: 0, open: 1,
-          stabPool: 'drift', hatStyles: ['breath'], bassPool: ['swell'], glint: 0.5,
-          cues: [
-            [0, 'kick', 0, 0], [0, 'bass', 0.5, 4], [0, 'hats', 0.1, 2], [0, 'perc', 0, 2],
-            [0, 'stabs', 0.5, 2], [0, 'pad', 1, 3], [0, 'waves', 1, 4], [0, 'glints', 0.7, 2],
-          ],
-          next: [['rise', 0.6], ['groove', 0.4]],
         },
       },
     },
@@ -689,74 +571,6 @@
             [0, 'stabs', 0.8, 2], [0, 'pad', 1, 3], [0, 'waves', 0.95, 4], [0, 'glints', 0.9, 2],
           ],
           next: [['rise', 0.4], ['groove', 0.6]],
-        },
-      },
-    },
-
-    // 残り火。暖かくくすんだ音。丸いアナログ風の和音と柔らかなキック、6th・add9・sus2 の少し切ない和声
-    ember: {
-      label: 'ember',
-      hidden: true, // メニューと auto には出さない（URL の #ember では鳴らせる）
-      bpm: [108, 114],
-      swing: [0.04, 0.09],
-      delaySteps: 3,
-      progressions: { ids: ['dusk-i-iv', 'dusk-four', 'dusk-i-III'] },
-      changeChance: { intro: 0.3, rise: 0.4, groove: 0.55, deep: 0.45, breakdown: 0.5 },
-      budget: { density: 10, occupancy: 5.6, smear: 3.4, joint: 0.8 },
-      drift: { bright: [30, 70, 160], decay: [38, 90], space: [48, 110] },
-      feedback: { base: 0.5, swing: 0.05, min: 0.38, max: 0.64 },
-      throwChance: { groove: 0.2, deep: 0.2, rise: 0.1, breakdown: 0.35 },
-      riser: false,
-      percSlots: [3, 7, 11, 14],
-      percHits: [1, 2],
-      waves: { periods: [4, 5, 6], chance: 0.7, rise: [24, 40], fall: [40, 64], peak: [0.25, 0.65] },
-      glint: { starts: [2, 6, 10], gaps: [3, 4, 6], range: [72, 88] },
-      sections: {
-        intro: {
-          bars: [4], kickless: true, duck: 0, open: 0.8,
-          stabPool: 'sparse', hatStyles: ['sparse'], bassPool: ['offbeat'], glint: 0.4,
-          cues: [
-            [0, 'waves', 0.8, 2], [0, 'pad', 1, 4], [0, 'stabs', 0.55, 4], [0, 'glints', 0.5, 4],
-            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0, 0], [0, 'perc', 0, 0],
-            [2, 'kick', 0.25, 2],
-          ],
-          next: [['rise', 1]],
-        },
-        rise: {
-          bars: [8], kickless: false, duck: 0.25, open: 0.9,
-          stabPool: 'full', hatStyles: ['open'], bassPool: ['offbeat', 'sparse'], glint: 0.35,
-          cues: [
-            [0, 'kick', 0.9, 8], [0, 'stabs', 0.8, 4], [0, 'pad', 0.9, 8], [0, 'waves', 0.6, 8],
-            [0, 'glints', 0.4, 4], [2, 'hats', 0.45, 6], [4, 'bass', 0.9, 4], [4, 'perc', 0.35, 4],
-          ],
-          next: [['groove', 1]],
-        },
-        groove: {
-          bars: [24, 32, 40], kickless: false, duck: 0.3, open: 1,
-          stabPool: 'full', hatStyles: ['open', 'sparse'], bassPool: ['offbeat', 'ghost'], glint: 0.3,
-          cues: [
-            [0, 'kick', 0.9, 0], [0, 'bass', 1, 0], [0, 'hats', 0.75, 2], [0, 'perc', 0.55, 2],
-            [0, 'stabs', 0.95, 2], [0, 'pad', 0.75, 4], [0, 'waves', 0.4, 4], [0, 'glints', 0.35, 4],
-          ],
-          next: [['deep', 0.45], ['breakdown', 0.4], ['groove', 0.15]],
-        },
-        deep: {
-          bars: [16, 24], kickless: false, duck: 0.25, open: 0.85,
-          stabPool: 'sparse', hatStyles: ['sparse'], bassPool: ['offbeat', 'sparse'], glint: 0.4,
-          cues: [
-            [0, 'kick', 0.9, 0], [0, 'bass', 0.9, 2], [0, 'hats', 0.45, 4], [0, 'perc', 0.3, 4],
-            [0, 'stabs', 0.7, 4], [0, 'pad', 0.9, 4], [0, 'waves', 0.5, 4], [0, 'glints', 0.5, 4],
-          ],
-          next: [['groove', 0.5], ['breakdown', 0.5]],
-        },
-        breakdown: {
-          bars: [8, 12], kickless: true, duck: 0, open: 1.15,
-          stabPool: 'sparse', hatStyles: ['sparse'], bassPool: ['offbeat'], glint: 0.5,
-          cues: [
-            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0.2, 2], [0, 'perc', 0, 2],
-            [0, 'stabs', 0.8, 2], [0, 'pad', 1, 3], [0, 'waves', 0.8, 4], [0, 'glints', 0.6, 2],
-          ],
-          next: [['rise', 0.5], ['groove', 0.5]],
         },
       },
     },
@@ -931,13 +745,19 @@
       delaySteps: 3,
       progressions: { ids: ['still', 'i-v', 'i-iv'] },
       changeChance: { intro: 0.3, rise: 0.45, groove: 0.6, deep: 0.5, breakdown: 0.5 },
-      budget: { density: 15, occupancy: 6, smear: 2.4, joint: 0.9 },
+      budget: { density: 18, occupancy: 6.5, smear: 2.4, joint: 0.9 }, // 決まった形のクリック（2 小節 16 打）のぶん
       drift: { bright: [24, 56, 130], decay: [30, 70], space: [40, 90] },
       feedback: { base: 0.34, swing: 0.06, min: 0.24, max: 0.46 },
       throwChance: { groove: 0.15, deep: 0.15, rise: 0.1, breakdown: 0.3 },
       riser: false,
       percSlots: [1, 3, 5, 6, 7, 9, 11, 13, 14, 15],
       percHits: [6, 10], // 2 小節ぶん。クリックが主役
+      // クリック: 細かく切り刻んだ 2 小節の決まった形で繰り返す（マイクロハウスのループ）。キックの拍は避ける
+      percLoop: [[1, 0.6], [3, 0.9], [6, 0.7], [7, 0.5], [9, 0.6], [11, 1], [14, 0.8], [15, 0.5],
+        [17, 0.6], [19, 0.9], [21, 0.5], [22, 0.7], [25, 0.6], [27, 1], [29, 0.7], [30, 0.8]],
+      // 16 分ごとの強さの倍率（ハット・クリック・ベース）。16 分の最後を強くして跳ねさせる
+      accent: [0.85, 0.65, 0.9, 1, 0.85, 0.65, 0.9, 1, 0.85, 0.65, 0.9, 1, 0.85, 0.65, 0.95, 1],
+      stabShift: [0, 7, 0, 3], // 小さな和音を、2 小節目と 4 小節目だけ横へずらす
       waves: { periods: [6, 8, 10], chance: 0.5, rise: [40, 64], fall: [64, 96], peak: [0.2, 0.45] },
       glint: { starts: [3, 7, 11, 14], gaps: [3, 5], range: [76, 93] },
       sections: {
@@ -1203,75 +1023,6 @@
       },
     },
 
-    // 漂うアシッド。キックは音量 0（聞こえないまま呼吸だけ）、303 がゆっくり鳴いて深いディレイに溶けていく。
-    // フィルターのつまみは acid よりさらにゆっくり回る
-    float: {
-      label: 'float',
-      hidden: true, // メニューと auto には出さない（URL の #float では鳴らせる）
-      bpm: [100, 108],
-      swing: [0, 0.03],
-      delaySteps: 3,
-      progressions: { ids: ['i-iv', 'i-v'], bars: [8, 16] }, // 同じ和音のまま動かない進行は使わない
-      changeChance: { intro: 0.3, rise: 0.4, groove: 0.52, deep: 0.45, breakdown: 0.45 },
-      budget: { density: 12, occupancy: 6, smear: 3.6, joint: 0.85 },
-      drift: { bright: [30, 70, 160], decay: [40, 90], space: [48, 110] },
-      feedback: { base: 0.56, swing: 0.06, min: 0.44, max: 0.68 },
-      throwChance: { groove: 0.3, deep: 0.3, rise: 0.2, breakdown: 0.45 },
-      riser: false,
-      percSlots: [4, 12, 14],
-      percHits: [1, 1],
-      acid: { tweak: [12, 20, 36] },
-      waves: { periods: [8, 10, 12], chance: 0.8, rise: [64, 96], fall: [96, 144], peak: [0.3, 0.6] },
-      glint: { starts: [2, 6, 10], gaps: [4, 6], range: [74, 91] },
-      sections: {
-        intro: {
-          bars: [4], kickless: true, duck: 0, open: 0.8,
-          stabPool: 'dubSparse', hatStyles: ['breath'], bassPool: ['acidSparse'], glint: 0.35,
-          cues: [
-            [0, 'waves', 0.7, 2], [0, 'pad', 1, 4], [0, 'stabs', 0.25, 4], [0, 'glints', 0.4, 4],
-            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0, 0], [0, 'perc', 0, 0],
-          ],
-          next: [['rise', 1]],
-        },
-        rise: {
-          bars: [8], kickless: false, duck: 0.3, open: 0.9,
-          stabPool: 'dubSparse', hatStyles: ['breath'], bassPool: ['acidSparse', 'acidLow'], glint: 0.3,
-          cues: [
-            [0, 'kick', 1, 8], [0, 'bass', 0.8, 4], [0, 'stabs', 0.3, 4], [0, 'pad', 0.9, 8],
-            [0, 'waves', 0.5, 8], [0, 'glints', 0.35, 4], [2, 'hats', 0.3, 6], [4, 'perc', 0.2, 4],
-          ],
-          next: [['groove', 1]],
-        },
-        groove: {
-          bars: [24, 32, 40], kickless: false, duck: 0.4, open: 1,
-          stabPool: 'dubSparse', hatStyles: ['breath', 'whisper'], bassPool: ['acidSparse', 'acidDrift', 'acidCall', 'acidDrop'], glint: 0.3,
-          cues: [
-            [0, 'kick', 1, 0], [0, 'bass', 0.95, 0], [0, 'hats', 0.35, 2], [0, 'perc', 0.25, 2],
-            [0, 'stabs', 0.3, 2], [0, 'pad', 0.9, 4], [0, 'waves', 0.45, 4], [0, 'glints', 0.35, 4],
-          ],
-          next: [['deep', 0.45], ['breakdown', 0.4], ['groove', 0.15]],
-        },
-        deep: {
-          bars: [16, 24], kickless: false, duck: 0.35, open: 0.85,
-          stabPool: 'dubSparse', hatStyles: ['breath'], bassPool: ['acidDrop', 'acidLow', 'acidDrift'], glint: 0.35,
-          cues: [
-            [0, 'kick', 1, 0], [0, 'bass', 0.85, 2], [0, 'hats', 0.25, 4], [0, 'perc', 0.15, 4],
-            [0, 'stabs', 0.25, 4], [0, 'pad', 1, 4], [0, 'waves', 0.55, 4], [0, 'glints', 0.45, 4],
-          ],
-          next: [['groove', 0.5], ['breakdown', 0.5]],
-        },
-        breakdown: {
-          bars: [8, 12, 16], kickless: true, duck: 0, open: 1.2,
-          stabPool: 'dubSparse', hatStyles: ['breath'], bassPool: ['acidSparse', 'acidCall'], glint: 0.45,
-          cues: [
-            [0, 'kick', 0, 0], [0, 'bass', 0.75, 2], [0, 'hats', 0.1, 2], [0, 'perc', 0, 2],
-            [0, 'stabs', 0.3, 2], [0, 'pad', 1, 3], [0, 'waves', 0.7, 4], [0, 'glints', 0.6, 2],
-          ],
-          next: [['rise', 0.5], ['groove', 0.5]],
-        },
-      },
-    },
-
     // ダブ・ギター。ミュートした短いギターの刻みを裏拍に置き、深いエコーへ投げ込む。太いダブのベースとリムショット
     skank: {
       label: 'skank',
@@ -1401,6 +1152,87 @@
           cues: [
             [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0.1, 2], [0, 'perc', 0, 2],
             [0, 'stabs', 0.25, 2], [0, 'pad', 1, 3], [0, 'waves', 0.7, 4], [0, 'glints', 1, 2],
+          ],
+          next: [['rise', 0.5], ['groove', 0.5]],
+        },
+      },
+    },
+
+    // エレクトロニカ（Jan Jelinek の Loop-Finding-Jazz-Records や Oval のような）。主役はループ: ジャズのレコードの一瞬のような
+    // エレピの和音の断片から、長さのちがうループ（3・5・7 ステップ）を切り出して少しずつずらして重ね、揺らめく模様（モアレ）を作る。
+    // ループの位置はときどき見つけ直し、フレーズの終わりには CD が飛んだように細かく繰り返す。レコードのプチプチがハットとリムになり、
+    // キックは柔らかく、ベースは深い。スタブときらめきは鳴らさない（ループがその役を担う）
+    dust: {
+      label: 'dust',
+      bpm: [108, 116],
+      swing: [0.04, 0.1],
+      delaySteps: 3,
+      progressions: { ids: ['dust-dorian', 'dust-still', 'dust-float'] },
+      changeChance: { intro: 0.3, rise: 0.4, groove: 0.5, deep: 0.45, breakdown: 0.45 },
+      budget: { density: 12, occupancy: 6, smear: 4, joint: 0.9 },
+      drift: { bright: [24, 56, 130], decay: [30, 72], space: [40, 96] },
+      feedback: { base: 0.42, swing: 0.06, min: 0.32, max: 0.55 },
+      throwChance: { groove: 0.1, deep: 0.15, rise: 0, breakdown: 0.25 },
+      riser: false,
+      percSlots: [3, 7, 10, 13, 15],
+      percHits: [2, 4],
+      // ループの層: part の強さで鳴らし、cycles から長さを選ぶ。gate は長さのうち鳴らす割合、rate は再生の速さ
+      // （2 層目をわずかに速くして、同じ断片どうしをうならせる）。find はフレーズごとに位置を見つけ直す確率、stutter は CD が飛ぶ確率
+      loops: {
+        layers: [
+          { part: 'stabs', cycles: [3, 5], gate: 0.95, level: 1, pan: -0.35, rate: 1 },
+          { part: 'glints', cycles: [5, 7, 6], gate: 0.8, level: 0.75, pan: 0.4, rate: 1.004 },
+        ],
+        find: 0.4,
+        stutter: 0.35,
+      },
+      waves: { periods: [8, 12, 16], chance: 0.5, rise: [48, 80], fall: [80, 120], peak: [0.2, 0.4] },
+      glint: { starts: [0], gaps: [4], range: [60, 84] },
+      sections: {
+        intro: {
+          bars: [8], kickless: true, duck: 0, open: 0.9,
+          stabPool: 'dubSparse', hatStyles: ['whisper'], bassPool: ['swell'], glint: 0,
+          cues: [
+            [0, 'waves', 0.6, 2], [0, 'stabs', 0.8, 4], [0, 'pad', 0.3, 8], [0, 'glints', 0, 0],
+            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0.4, 4], [0, 'perc', 0, 0],
+            [4, 'glints', 0.5, 4],
+          ],
+          next: [['rise', 1]],
+        },
+        rise: {
+          bars: [8], kickless: false, duck: 0.15, open: 1,
+          stabPool: 'dubSparse', hatStyles: ['whisper', 'breath'], bassPool: ['swell', 'dub'], glint: 0,
+          cues: [
+            [0, 'kick', 0.7, 8], [0, 'stabs', 1, 2], [0, 'glints', 0.7, 4], [0, 'pad', 0.3, 4],
+            [0, 'waves', 0.45, 4], [0, 'hats', 0.7, 4], [4, 'bass', 0.9, 4], [4, 'perc', 0.6, 4],
+          ],
+          next: [['groove', 1]],
+        },
+        groove: {
+          bars: [24, 32, 40], kickless: false, duck: 0.2, open: 1,
+          stabPool: 'dubSparse', hatStyles: ['whisper', 'sixteenths'], bassPool: ['dub', 'sparse', 'swell'], glint: 0,
+          cues: [
+            [0, 'kick', 0.8, 2], [0, 'bass', 1, 2], [0, 'hats', 0.8, 2], [0, 'perc', 0.7, 2],
+            [0, 'stabs', 1, 2], [0, 'glints', 0.8, 4], [0, 'pad', 0.25, 4], [0, 'waves', 0.4, 4],
+          ],
+          next: [['deep', 0.45], ['breakdown', 0.35], ['groove', 0.2]],
+        },
+        deep: {
+          // 2 層目のループが前に出て、模様が変わる
+          bars: [16, 24], kickless: false, duck: 0.15, open: 0.9,
+          stabPool: 'dubSparse', hatStyles: ['whisper'], bassPool: ['dub', 'swell'], glint: 0,
+          cues: [
+            [0, 'kick', 0.75, 2], [0, 'bass', 0.9, 2], [0, 'hats', 0.55, 4], [0, 'perc', 0.5, 4],
+            [0, 'stabs', 0.7, 4], [0, 'glints', 1, 4], [0, 'pad', 0.4, 4], [0, 'waves', 0.5, 4],
+          ],
+          next: [['groove', 0.55], ['breakdown', 0.45]],
+        },
+        breakdown: {
+          bars: [8, 12], kickless: true, duck: 0, open: 1.1,
+          stabPool: 'dubSparse', hatStyles: ['whisper'], bassPool: ['swell'], glint: 0,
+          cues: [
+            [0, 'kick', 0, 0], [0, 'bass', 0, 0], [0, 'hats', 0.3, 2], [0, 'perc', 0.2, 2],
+            [0, 'stabs', 0.9, 2], [0, 'glints', 0.5, 2], [0, 'pad', 0.5, 3], [0, 'waves', 0.8, 4],
           ],
           next: [['rise', 0.5], ['groove', 0.5]],
         },

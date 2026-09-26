@@ -45,20 +45,17 @@
 :root[data-world="dawn"]  { --night: #110c10; --haze: #2a1a1e; --line-rgb: 242, 218, 204; --glow-rgb: 222, 150, 120; }
 :root[data-world="moon"]  { --night: #08090e; --haze: #171a28; --line-rgb: 222, 226, 242; --glow-rgb: 160, 172, 222; }
 :root[data-world="pulse"] { --night: #0f0607; --haze: #241010; --line-rgb: 238, 206, 202; --glow-rgb: 210, 92, 82; }
-:root[data-world="glass"] { --night: #04090c; --haze: #0a1f28; --line-rgb: 204, 238, 246; --glow-rgb: 110, 202, 232; }
-:root[data-world="deep"]  { --night: #020306; --haze: #060919; --line-rgb: 150, 166, 204; --glow-rgb: 48, 70, 152; }
 :root[data-world="calm"]  { --night: #0a080b; --haze: #1e1720; --line-rgb: 228, 214, 226; --glow-rgb: 176, 140, 180; }
 :root[data-world="glide"] { --night: #040b0c; --haze: #0a2024; --line-rgb: 196, 240, 236; --glow-rgb: 60, 190, 180; }
-:root[data-world="ember"] { --night: #0e0906; --haze: #26170e; --line-rgb: 240, 214, 190; --glow-rgb: 214, 140, 80; }
 :root[data-world="fog"]   { --night: #0b0c0d; --haze: #1d2124; --line-rgb: 220, 226, 230; --glow-rgb: 150, 166, 178; }
 :root[data-world="motor"] { --night: #08061a; --haze: #1a1440; --line-rgb: 214, 206, 255; --glow-rgb: 120, 96, 255; }
 :root[data-world="click"] { --night: #0a0b06; --haze: #1c1f10; --line-rgb: 228, 234, 196; --glow-rgb: 170, 190, 80; }
 :root[data-world="sunset"] { --night: #140a14; --haze: #3a1630; --line-rgb: 255, 214, 200; --glow-rgb: 250, 110, 110; }
 :root[data-world="acid"]  { --night: #050a04; --haze: #0f2308; --line-rgb: 214, 255, 170; --glow-rgb: 140, 255, 60; }
 :root[data-world="phase"] { --night: #0c0b08; --haze: #242018; --line-rgb: 236, 228, 206; --glow-rgb: 200, 176, 120; }
-:root[data-world="float"] { --night: #120810; --haze: #2e1428; --line-rgb: 255, 210, 236; --glow-rgb: 255, 110, 200; }
 :root[data-world="skank"] { --night: #0c0a04; --haze: #2a2008; --line-rgb: 250, 232, 170; --glow-rgb: 230, 190, 60; }
 :root[data-world="shore"] { --night: #0a0d0c; --haze: #1e2724; --line-rgb: 226, 240, 232; --glow-rgb: 150, 200, 180; }
+:root[data-world="dust"]  { --night: #0b0a09; --haze: #1f1c19; --line-rgb: 230, 224, 216; --glow-rgb: 168, 158, 146; }
 
 html {
   height: 100%;

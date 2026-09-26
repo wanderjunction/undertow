@@ -385,19 +385,22 @@ test('オルガンのドローン（fog）: 和音を純正律で合わせ、声
   const { mtof } = U.util;
   const organs = IDS.filter((w) => PATCHES[w].pad.organ);
   assert.ok(organs.length > 0);
-  // [和音, 入る順の [音, A3（220 Hz）からの純正な比]]。ペダル（32'・16'）と根音のあと、5 度・4 度で合わせられる声部から先に入る
+  // [和音, 根音のあとに入る順の [音, A3（220 Hz）からの純正な比]]。ペダル（パッチの pedal、根音の何オクターブか下）と根音のあと、
+  // 5 度・4 度で合わせられる声部から先に入る
   const cases = [
     // A m9: 5 度、その 5 度（9 度）、5 度の下の長 3 度（短 3 度）、その 5 度（短 7 度）
-    [[57, 60, 64, 67, 71], [[33, 1 / 4], [45, 1 / 2], [57, 1], [64, 3 / 2], [71, 9 / 4], [60, 6 / 5], [67, 9 / 5]]],
+    [[57, 60, 64, 67, 71], [[64, 3 / 2], [71, 9 / 4], [60, 6 / 5], [67, 9 / 5]]],
     // A m11: 11 度（4 度）から 5 度ずつ下へ（短 7 度、短 3 度は 32:27）、短 7 度の上の長 3 度（9 度）
-    [[57, 60, 67, 71, 74], [[33, 1 / 4], [45, 1 / 2], [57, 1], [74, 8 / 3], [67, 16 / 9], [60, 32 / 27], [71, 20 / 9]]],
+    [[57, 60, 67, 71, 74], [[74, 8 / 3], [67, 16 / 9], [60, 32 / 27], [71, 20 / 9]]],
     // 5 度のない短 3 度は 6:5
-    [[57, 60], [[33, 1 / 4], [45, 1 / 2], [57, 1], [60, 6 / 5]]],
+    [[57, 60], [[60, 6 / 5]]],
   ];
   for (const world of organs) {
     const O = PATCHES[world].pad.organ;
-    assert.deepEqual(O.pedal.map(([i]) => i), [-24, -12], "この検査はペダルが 32' と 16' の前提");
-    for (const [notes, expected] of cases) {
+    const pedal = O.pedal.map(([i]) => i).sort((x, y) => x - y);
+    assert.ok(pedal.every((i) => i % 12 === 0 && i < 0), "ペダルは根音のオクターブ下");
+    for (const [notes, rest] of cases) {
+      const expected = pedal.map((i) => [57 + i, 2 ** (i / 12)]).concat([[57, 1]], rest);
       const ctx = new FakeContext();
       const voices = new U.Voices(ctx, new U.core.Director({ seed: 1, world }).identity);
       const s0 = ctx.sources.length;
@@ -531,6 +534,60 @@ test('909 風のドラム（motor）: 手拍子は何度かはじいて最後を
     }
   }
   assert.ok(tested > 0);
+});
+
+test('ループの一片（dust）: 和音ごとの断片を一度だけ作って使い回し、切り出して短く鳴らす。キックの音程は tune で変わる', () => {
+  let tested = 0;
+  for (const world of IDS) {
+    const P = PATCHES[world];
+    const ctx = new FakeContext();
+    const voices = new U.Voices(ctx, new U.core.Director({ seed: 1, world }).identity);
+    if (P.stab.grain) {
+      tested++;
+      const G = P.stab.grain;
+      const s0 = ctx.sources.length;
+      voices._grain({ step: 0, notes: [57, 60, 64, 67], offset: 0.3, len: 3, rate: 1, vel: 0.8, pan: 0 }, 1);
+      voices._grain({ step: 3, notes: [57, 60, 64, 67], offset: 0.3, len: 3, rate: 1.004, vel: 0.8, pan: 0 }, 1.5);
+      voices._grain({ step: 0, notes: [55, 58, 62, 65], offset: 0.6, len: 5, rate: 1, vel: 0.8, pan: 0 }, 2);
+      const [a, b, c] = ctx.sources.slice(s0);
+      assert.equal(a.buffer, b.buffer, `${world}: the same chord reuses its fragment`);
+      assert.notEqual(a.buffer, c.buffer, `${world}: a new chord makes a new fragment`);
+      assert.ok(Math.abs(a.buffer.duration - G.seconds) < 1e-3);
+      const d = a.buffer.getChannelData(0);
+      assert.ok(d.some((x) => Math.abs(x) > 0.01) && d.every((x) => Number.isFinite(x)), `${world}: the fragment is not silent`);
+      assert.equal(b.playbackRate.value, 1.004);
+      for (const src of [a, b, c]) assert.ok(src.stopAt > src.startAt && src.stopAt - src.startAt < 1, `${world}: a grain is short`);
+    }
+    if (U.worlds.WORLDS[world].kickTune && !P.kick.ghost) {
+      tested++;
+      const s0 = ctx.sources.length;
+      voices._kick({ step: 0, vel: 1, presence: 1, duck: 0 }, 3);
+      voices._kick({ step: 4, vel: 1, presence: 1, duck: 0, tune: 3 }, 4);
+      const [low, high] = ctx.sources.slice(s0).filter((x) => x.kind === 'osc');
+      const f = (o) => o.frequency.events[0].value;
+      assert.ok(Math.abs(f(high) / f(low) - 2 ** (3 / 12)) < 1e-9, `${world}: the kick is tuned up 3 semitones`);
+    }
+  }
+  assert.ok(tested >= 2);
+});
+
+test('澄んだ鈴（drift）: ライドに tone を持つ WORLD は、金属の響きの代わりに決めた比の倍音だけを鳴らす', () => {
+  const { mtof } = U.util;
+  for (const world of IDS.filter((w) => PATCHES[w].hat.ride && PATCHES[w].hat.ride.tone)) {
+    const D = PATCHES[world].hat.ride;
+    const ctx = new FakeContext();
+    const identity = new U.core.Director({ seed: 1, world }).identity;
+    const voices = new U.Voices(ctx, identity);
+    const s0 = ctx.sources.length;
+    voices._hat({ step: 10, vel: 0.8, ride: true, open: false, pan: 0 }, 2);
+    const src = ctx.sources.slice(s0);
+    assert.equal(src.length, D.tone.length, `${world}: one oscillator per partial`);
+    src.forEach((o, i) => {
+      assert.equal(o.kind, 'osc');
+      assert.ok(Math.abs(o.frequency.value - mtof(identity.percNote + D.octave) * D.tone[i][0]) < 1e-9);
+      assert.ok(o.stopAt > o.startAt);
+    });
+  }
 });
 
 test('一度きりの音源は、必ず始まった後に止まる予定を持つ', () => {

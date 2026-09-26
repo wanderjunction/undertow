@@ -4,21 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Undertow</title>
-<meta name="description" content="静かな波のような、アンビエントでミニマルな四つ打ちテクノを生成し続けるプレイヤー">
+<meta name="description" content="アンビエントからテクノ、ドローン、エレクトロニカまで、いろいろな電子音楽の波を生成し続けるプレイヤー">
 <meta name="theme-color" content="#05090e">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2305090e'/%3E%3Cpath d='M5 18c3.5-5 7-5 11 0s7.5 5 11 0' fill='none' stroke='%23e6edf1' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400&amp;family=Jost:wght@300;400&amp;display=swap">
 <!-- ?v= は版ごとに上げる（ブラウザが古い CSS / JS を覚えたまま、新しいページだけ読むことがないように） -->
-<link rel="stylesheet" href="style.css?v=1.16">
+<link rel="stylesheet" href="style.css?v=1.18">
 </head>
 <body>
 <canvas id="sea" aria-hidden="true"></canvas>
 
 <main class="stage">
   <h1 class="wordmark"><img src="assets/undertow-logo.png" alt="Undertow" width="1818" height="344"></h1>
-  <p class="tagline" lang="en">ambient minimal techno</p>
+  <p class="tagline" lang="en">electronic undercurrents</p>
 
   <div class="controls">
     <button id="shuffle" class="change shuffle" type="button" aria-pressed="true" aria-label="auto（曲ごとに曲調を選び直す）" title="auto — 曲ごとに曲調を選び直す">
@@ -48,7 +48,7 @@
   <p class="hint" lang="en"><kbd>space</kbd> play / stop</p>
 </footer>
 
-<p class="version" lang="en">v1.16</p>
+<p class="version" lang="en">v1.18</p>
 
 <button id="about-open" class="about-open" type="button" lang="en" aria-haspopup="dialog">about</button>
 
@@ -61,9 +61,9 @@
 
     <div class="about-text" lang="ja" data-lang="ja">
       <h2 id="about-title" lang="en">Undertow</h2>
-      <p class="about-lead">静かな波のような、アンビエントでミニマルな四つ打ちテクノを、止めるまで作り続けるプレイヤーです。</p>
+      <p class="about-lead">アンビエントからテクノ、ドローン、エレクトロニカまで、いろいろな電子音楽の波を、止めるまで作り続けるプレイヤーです。</p>
       <p>決まった曲を流すのではなく、再生するたびにその場で新しい曲が生まれます。キー、テンポ、展開は毎回ちがい、同じ曲は二度と流れません。録音された音は使わず、キックからシンギングボウルの響きまで、すべてブラウザの中でリアルタイムに合成しています。</p>
-      <p>曲は波とパッドだけの静かな始まりから、水面下の鼓動のようなキックがだんだん浮かび上がり、四つ打ちの流れへと満ちていきます。8 小節ごとに変化が起きても、一度に変わるのは一つまで。気づくか気づかないかくらいの変化が続くので、長く聴いていても飽きにくく、邪魔にもなりにくい作りです。セクションとは別に、曲全体も数分かけて近づいたり遠ざかったりします。</p>
+      <p>多くの曲は、波とパッドだけの静かな始まりから、水面下の鼓動のようなキックがだんだん浮かび上がり、四つ打ちの流れへと満ちていきます（拍を持たない曲調もあります）。8 小節ごとに変化が起きても、一度に変わるのは一つまで。気づくか気づかないかくらいの変化が続くので、長く聴いていても飽きにくく、邪魔にもなりにくい作りです。セクションとは別に、曲全体も数分かけて近づいたり遠ざかったりします。</p>
 
       <h3>使い方</h3>
       <ul>
@@ -78,32 +78,31 @@
       <h3>曲調</h3>
       <dl class="about-worlds">
         <dt lang="en">tide</dt><dd>静かな波の上のダブ・ミニマル。寄せては返す波の中で、深いエコーをまとった和音が繰り返される。Undertow の基本</dd>
-        <dt lang="en">drift</dt><dd>ゆっくり漂うアンビエント。ビートは水面下に留まり、ふわふわのパッドが主役。長く暗い残響</dd>
-        <dt lang="en">echo</dt><dd>ダブテクノ寄り。短い和音とリムショットが、テープのように少し歪んだ深いエコーの中で跳ね返る</dd>
+        <dt lang="en">drift</dt><dd>ゆっくり漂うアンビエント。ビートは水面下に留まり、ストリングスのような柔らかなパッドが一声ずつ入れ替わりながら、ゆっくり膨らんではしぼむ。ときどき柔らかな 1 音や澄んだ鈴が、長く暗い残響の中へ消えていく</dd>
+        <dt lang="en">echo</dt><dd>ダブテクノ。1 つの和音が深いエコーの中で刻まれ続け、フィルターがゆっくり開いたり閉じたりする。ヒスとレコードの音</dd>
         <dt lang="en">dawn</dt><dd>明け方。澄んだ長調の和音と、木琴のようなきらめき</dd>
         <dt lang="en">moon</dt><dd>月明かりの水面。柔らかな和音の上で、澄んだ音が波のようにゆっくり満ちては消える</dd>
-        <dt lang="en">pulse</dt><dd>いちばんテクノ寄り。硬めのキック、細かく刻むハット、動くベース</dd>
-        <dt lang="en">glass</dt><dd>透明で冷たい。高く短い音と金属のようなきらめき。広い空間</dd>
-        <dt lang="en">deep</dt><dd>深海。低いドローンと、とても長い残響の中へ沈んでいく</dd>
+        <dt lang="en">pulse</dt><dd>ミニマル。1 小節の短い単音のモチーフを延々と繰り返し、フィルターのつまみだけがゆっくり動く。高いキックと低いキックが交互に鳴り、刻むハットとタムがうねる。残響のない、乾いたファンク</dd>
         <dt lang="en">calm</dt><dd>リラクゼーションに全振り。遠い心拍のような鼓動の中で、シンギングボウルがゆっくり響く</dd>
         <dt lang="en">glide</dt><dd>滑るように流れる。ベース・パーカッション・アルペジオの周期が少しずつずれながら、途切れなく流れる</dd>
         <dt lang="en">fog</dt><dd>霧。拍はなく、オルガンのような持続音が一声ずつ重なっていく。和音が変わるときも一声ずつ入れ替わり、純正律の澄んだ響きがゆっくりうなりながら、満ち引きする霧に溶ける</dd>
         <dt lang="en">motor</dt><dd>デトロイト。明るいのか暗いのか分からない和音を、根音を抜いた柔らかなシンセが妙な位置で刻む。前に出る 909 風のドラム（ドンドンと押すキック、チキチキと刻むハット、手拍子、ライド）と、曲を回すベース、ときどき浮かぶベル。夜の都市のように切なく、未来的</dd>
-        <dt lang="en">click</dt><dd>マイクロハウス。プチプチした細かなクリックが主役で、軽く跳ねる。小さく乾いた和音と、短く弾むベース</dd>
+        <dt lang="en">click</dt><dd>マイクロハウス。細かく切り刻んだクリックのループが主役で、軽く跳ねる。小さく乾いた和音と、短く弾むベース</dd>
         <dt lang="en">sunset</dt><dd>夕暮れ（バレアリック）。暖かい長調の中で、ナイロンギターがゆっくり和音を鳴らして余韻を残し、ときどき単音のフレーズを弾く。コンガとシェイカー</dd>
         <dt lang="en">acid</dt><dd>ミニマル・アシッド。TB-303 風のベースが一音ごとに鳴き、ときどき音程が滑る。フィルターのつまみがゆっくり回っていく</dd>
-        <dt lang="en">phase</dt><dd>ライヒ風。マリンバのような音が途切れなく流れ、少しずつずれながら模様を変えていく</dd>
+        <dt lang="en">phase</dt><dd>ずれていく反復（フェイズ）。マリンバのような音が途切れなく流れ、少しずつずれながら模様を変えていく</dd>
         <dt lang="en">skank</dt><dd>ダブ・ギター。短く刻んだギターを、深いエコーへ投げ込む</dd>
         <dt lang="en">shore</dt><dd>水辺の箏。弾いたあとに音程がゆっくり揺れる単音が、長いエコーの中に消えていく</dd>
+        <dt lang="en">dust</dt><dd>エレクトロニカ。エレピの和音の断片を短く切り、長さのちがうループを少しずつずらして重ねて、揺らめく模様を作る。ループはときどき場所を変え、CD が飛んだように細かく繰り返す。レコードのプチプチと柔らかいキック、深いベース</dd>
       </dl>
       <p class="about-note">テンポは目安の範囲です。再生のたびに、その範囲の中で決まります。</p>
     </div>
 
     <div class="about-text" lang="en" data-lang="en" hidden>
       <h2 lang="en">Undertow</h2>
-      <p class="about-lead">A player that keeps making ambient, minimal four-on-the-floor techno, like quiet waves, until you stop it.</p>
+      <p class="about-lead">A player that keeps making waves of electronic music — from ambient to techno, drone and electronica — until you stop it.</p>
       <p>Nothing is prerecorded. Every time you press play, a new track is composed on the spot — the key, the tempo and the arrangement change each time, and the same track never plays twice. There are no samples: everything from the kick to the singing bowls is synthesized live in your browser.</p>
-      <p>Each track begins quietly with waves and pads. A kick rises slowly, like a heartbeat under the surface, until the four-on-the-floor flow fills in. Something changes every eight bars, but never more than one thing at a time. The changes are so subtle you may barely notice them, so it stays fresh over long listening without getting in the way. On top of that, the whole track slowly drifts closer and farther away over several minutes.</p>
+      <p>Most tracks begin quietly with waves and pads. A kick rises slowly, like a heartbeat under the surface, until the four-on-the-floor flow fills in (some moods have no beat at all). Something changes every eight bars, but never more than one thing at a time. The changes are so subtle you may barely notice them, so it stays fresh over long listening without getting in the way. On top of that, the whole track slowly drifts closer and farther away over several minutes.</p>
 
       <h3>How to use</h3>
       <ul>
@@ -118,23 +117,22 @@
       <h3>Moods</h3>
       <dl class="about-worlds">
         <dt>tide</dt><dd>Dub minimal over quiet waves. Chords wrapped in deep echo repeat as the waves come and go. The heart of Undertow</dd>
-        <dt>drift</dt><dd>Slow, floating ambient. The beat stays under the surface and soft pads take the lead. Long, dark reverb</dd>
-        <dt>echo</dt><dd>Leaning toward dub techno. Short chords and rimshots bounce through deep, slightly tape-worn echoes</dd>
+        <dt>drift</dt><dd>Slow, floating ambient. The beat stays under the surface while soft, string-like pads trade places voice by voice, slowly swelling and fading. Now and then a single soft note, or a clear little bell, fades away into long, dark reverb</dd>
+        <dt>echo</dt><dd>Dub techno. A single chord keeps pulsing inside deep echoes while the filter slowly opens and closes, wrapped in hiss and record noise</dd>
         <dt>dawn</dt><dd>Daybreak. Clear major-key chords and xylophone-like sparkles</dd>
         <dt>moon</dt><dd>Moonlit water. Over soft chords, pure tones slowly swell and fade like waves</dd>
-        <dt>pulse</dt><dd>The most techno of all. A firmer kick, busy hi-hats and a moving bassline</dd>
-        <dt>glass</dt><dd>Clear and cold. High, short sounds and metallic sparkles in a wide space</dd>
-        <dt>deep</dt><dd>The deep sea. Sinking into low drones and very long reverb</dd>
+        <dt>pulse</dt><dd>Minimal. A short one-bar motif on a single note repeats and repeats while only the filter slowly moves. Higher and lower kicks alternate under ticking hats and rolling toms. Dry, reverb-free funk</dd>
         <dt>calm</dt><dd>Pure relaxation. Singing bowls ring slowly over a pulse like a distant heartbeat</dd>
         <dt>glide</dt><dd>Gliding. Bass, percussion and arpeggio cycles drift slightly out of step and flow on without a break</dd>
         <dt>fog</dt><dd>Fog. No beat at all: organ-like tones enter one voice at a time, and when the chord changes they trade places one by one. Pure, just-intoned chords beat slowly as they dissolve into drifting mist</dd>
         <dt>motor</dt><dd>Detroit. Soft rootless synth chords, caught between sad and hopeful, land in odd places over up-front 909-style drums (a driving kick, ticking hats, handclaps, ride), a bassline that keeps the track turning, and bells that surface now and then. Melancholic and futuristic, like a city at night</dd>
-        <dt>click</dt><dd>Microhouse. Tiny crackling clicks take the lead with a light bounce, over small dry chords and a short, springy bass</dd>
+        <dt>click</dt><dd>Microhouse. A loop of finely chopped clicks takes the lead with a light bounce, over small dry chords and a short, springy bass</dd>
         <dt>sunset</dt><dd>Balearic sunset. Over warm major chords, a nylon guitar lets slow strums ring out and now and then plays a few single notes, with congas and shakers</dd>
         <dt>acid</dt><dd>Minimal acid. A TB-303-style bassline squelches on every note and sometimes slides between them, as the filter knob slowly turns</dd>
-        <dt>phase</dt><dd>Reich-style phasing. Marimba-like notes flow without a break, slowly shifting their pattern</dd>
+        <dt>phase</dt><dd>Phasing repetition. Marimba-like notes flow without a break, slowly shifting their pattern</dd>
         <dt>skank</dt><dd>Dub guitar. Short, muted guitar chops thrown into deep echoes</dd>
         <dt>shore</dt><dd>Koto by the water. Single notes waver after each pluck and fade into long echoes</dd>
+        <dt>dust</dt><dd>Electronica. Tiny fragments of electric-piano chords are cut into loops of different lengths that drift against each other into a shimmering moiré. Now and then a loop jumps to a new spot, or skips like a scratched CD. Record crackle, a soft kick, a deep bass</dd>
       </dl>
       <p class="about-note">Tempos are ranges. Each play picks a tempo within the range.</p>
     </div>
@@ -143,14 +141,14 @@
 
 <p id="status" class="visually-hidden" role="status" aria-live="polite"></p>
 
-<script src="js/core/util.js?v=1.16"></script>
-<script src="js/core/rng.js?v=1.16"></script>
-<script src="js/core/content.js?v=1.16"></script>
-<script src="js/core/worlds.js?v=1.16"></script>
-<script src="js/core/director.js?v=1.16"></script>
-<script src="js/audio/patches.js?v=1.16"></script>
-<script src="js/audio/voices.js?v=1.16"></script>
-<script src="js/audio/transport.js?v=1.16"></script>
-<script src="js/app.js?v=1.16"></script>
+<script src="js/core/util.js?v=1.18"></script>
+<script src="js/core/rng.js?v=1.18"></script>
+<script src="js/core/content.js?v=1.18"></script>
+<script src="js/core/worlds.js?v=1.18"></script>
+<script src="js/core/director.js?v=1.18"></script>
+<script src="js/audio/patches.js?v=1.18"></script>
+<script src="js/audio/voices.js?v=1.18"></script>
+<script src="js/audio/transport.js?v=1.18"></script>
+<script src="js/app.js?v=1.18"></script>
 </body>
 </html>

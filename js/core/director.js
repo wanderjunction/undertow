@@ -171,7 +171,8 @@
     const root = 45 + mod(pc - 45, 12); // A2..G♯3
     const close = iv.map((i) => root + i);
     // rootless（motor）: スタブは根音を抜いて上の音だけで鳴らし、根音はベースに任せる（浮いた響き）
-    const stab = (voicing === 'guitar' && guitarVoicing(pc, iv)) || (voicing === 'rootless' ? close.slice(1) : close);
+    // mono（pulse）: スタブは根音 1 音だけ（1 オクターブ上）。モチーフを単音で刻む
+    const stab = (voicing === 'guitar' && guitarVoicing(pc, iv)) || (voicing === 'rootless' ? close.slice(1) : voicing === 'mono' ? [root + 12] : close);
     const tones = iv.map((i) => mod(pc + i, 12));
     const glint = [];
     for (let m = glintRange[0]; m <= glintRange[1]; m++) if (tones.includes(m % 12)) glint.push(m);
@@ -400,6 +401,7 @@
       this._swell = makeDrift(derive(s, 'swell'), this.W.swell || CAL.swell);
       // アシッドのつまみ: フィルターの開き具合が、数十小節かけてゆっくり回る（acid の WORLD だけ。専用の stream）
       this._acid = this.W.acid ? makeDrift(derive(s, 'acid'), this.W.acid.tweak) : null;
+      this._loopRng = this.W.loops ? derive(s, 'loops') : null; // ループの位置を見つけ直す（dust）
       this._state = null;
       this._bar = 0;
     }
@@ -477,8 +479,19 @@
         s.chord = voiceChord(this.identity.keyPc, off, type, this.W.glint.range, this.W.voicing);
         controls.push({ kind: 'pad', step: 0, notes: s.chord.pad });
       }
+      if (this.W.loops && (!s.loops || (bar > 0 && bar % CONFIRMED.PHRASE_BARS === 0))) s.loops = this._findLoops(s.loops);
       s.bar = bar;
       return deepFreeze(s);
+    }
+
+    // ループ（dust）: 層ごとに [長さ（ステップ）, 断片の中の切り出す位置（0..1）, 始まりのずれ]。最初に決め、
+    // フレーズの境目ごとに、層ごとに find の確率で見つけ直す（Jelinek がループの位置をホイールでずらしたように）
+    _findLoops(prev) {
+      const r = this._loopRng;
+      const L = this.W.loops;
+      return L.layers.map((layer, i) =>
+        prev && !r.chance(L.find) ? prev[i] : { cycle: r.pick(layer.cycles), offset: round(r.range(0, 1)), phase: r.int(0, 15) },
+      );
     }
 
     _enterSection(s, type, bar) {
@@ -560,13 +573,15 @@
       for (const k of CONFIRMED.KICK_STEPS) {
         const p = rampAt(L.kick, at(k));
         if (p < 0.02 || (dropLast && k === 12)) continue;
-        events.push({
+        const kick = {
           voice: 'kick',
           step: k,
           vel: round(h.range(0.94, 1)),
           presence: round(p),
           duck: round(rampAt(s.duck, at(k)) * p),
-        });
+        };
+        if (W.kickTune) kick.tune = W.kickTune[k / 4]; // pulse: 高いキックと低いキックを交互に（半音）
+        events.push(kick);
       }
 
       let prevBass = null;
@@ -608,10 +623,11 @@
         events.push({ voice: 'perc', step: swing(st), note: id.percNote, vel: round(v * p * (W.accent ? W.accent[st] : 1)), pan: round(h.range(-0.5, 0.5)) });
       }
 
-      // ライド（motor）: W.ride の位置に毎小節。ハットの強さに従い、揺らさない
+      // ライド（motor）: W.ride の位置に毎小節。ハットの強さに従い、揺らさない。
+      // rideChance（drift のトライアングル）を持つ WORLD は、その確率でだけ鳴らす
       if (W.ride && !W.poly) for (const [st, v] of W.ride) {
         const p = rampAt(L.hats, at(st));
-        if (p >= 0.02) events.push({ voice: 'hat', ride: true, step: swing(st), vel: round(v * p), open: false, pan: -0.2 });
+        if (p >= 0.02 && (!W.rideChance || h.chance(W.rideChance))) events.push({ voice: 'hat', ride: true, step: swing(st), vel: round(v * p), open: false, pan: -0.2 });
       }
 
       // 手拍子（motor）: W.claps の位置に毎小節。パーカッションの強さに従い、ドラムマシンらしく強さを揺らさない（乱数を使わない）
@@ -633,7 +649,8 @@
       let lastStab = null;
       // W.stabShift（motor）: 4 小節のうち決まった小節だけ、同じ形のまま横へずらす（和声は動かないのに、置き場所で曲が動く）
       const shift = W.stabShift ? W.stabShift[bar % W.stabShift.length] : 0;
-      const stabSteps = (bar % 2 ? P.stabs.b : P.stabs.a).map((x) => (x + shift) % STEPS).sort((x, y) => x - y);
+      // W.oneBar（pulse）: 毎小節同じ形（1 小節のモチーフ）。W.loops（dust）: スタブの代わりにループが和音を鳴らす
+      const stabSteps = W.loops ? [] : (W.oneBar || bar % 2 === 0 ? P.stabs.a : P.stabs.b).map((x) => (x + shift) % STEPS).sort((x, y) => x - y);
       for (const st of stabSteps) {
         const p = rampAt(L.stabs, at(st));
         if (p < 0.02 || !h.chance(0.92)) continue;
@@ -664,6 +681,24 @@
           if (Math.floor(pos / STEPS) !== bar % (W.riff.bars || 2)) continue;
           const st = pos % STEPS;
           events.push({ voice: 'glint', step: swing(st), note: pool[Math.max(0, pool.length - 1 - rank)], vel: round(clamp(v * lv, 0, 1)), pan: round(0.3 * Math.sin(pos)) });
+        }
+      } else if (W.loops) {
+        // ループ（dust）: 層ごとに、決まった長さで同じ切り抜きを繰り返す。長さが 16 で割り切れないので、層どうしが
+        // 少しずつずれて揺らめく（モアレ）。拍には揃えない（サンプラーのループなので swing もしない）
+        s.loops.forEach((lp, i) => {
+          const layer = W.loops.layers[i];
+          for (let st = 0; st < STEPS; st++) {
+            if (mod(bar * STEPS + st - lp.phase, lp.cycle) !== 0) continue;
+            const p = rampAt(L[layer.part], at(st)) * layer.level;
+            if (p >= 0.02) events.push({ voice: 'grain', step: st, notes: s.chord.pad, offset: lp.offset, len: round(lp.cycle * layer.gate), rate: layer.rate, vel: round(p), pan: layer.pan });
+          }
+        });
+        // CD が飛んだように: フレーズの終わりの最後の拍で、ごく短い切り抜きを半ステップずつ繰り返す
+        const p0 = rampAt(L[W.loops.layers[0].part], at(12)) * W.loops.layers[0].level;
+        if (bar % CONFIRMED.PHRASE_BARS === CONFIRMED.PHRASE_BARS - 1 && p0 >= 0.02 && h.chance(W.loops.stutter)) {
+          for (let k = 0; k < 8; k++) {
+            events.push({ voice: 'grain', step: 12 + k / 2, notes: s.chord.pad, offset: s.loops[0].offset, len: 0.45, rate: 1, vel: round(p0 * (1 - k * 0.06)), pan: W.loops.layers[0].pan });
+          }
         }
       } else if (!W.poly && gl > 0.02 && h.chance(0.12 + 0.5 * gl)) {
         const pool = s.chord.glint;

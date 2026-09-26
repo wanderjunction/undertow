@@ -59,25 +59,38 @@
 
     // ふわふわのパッドが主役。キックは柔らかく、ハットは息のように、残響は長く暗く
     drift: {
-      version: 'drift-mix-0.3', // 0.1 はパッドが -17 dB と前に出すぎてリミッタに当たっていた。0.3 でスタブの鳴り始めをずらした
+      version: 'drift-mix-0.4', // 0.4 でパッドを主役に（fog のオルガンの仕組みを、ストリングスのような柔らかい設定で）。きらめきはやめた // 0.1 はパッドが -17 dB と前に出すぎてリミッタに当たっていた。0.3 でスタブの鳴り始めをずらした
       mix: {
+        trim: 1.2, // 全体を約 1.6 dB 上げて、calm・moon と同じあたりに
         kick: 0.28, bass: 0.3,
         hats: 0.45, hatsVerb: 0.14,
         perc: 0.2, percDly: 0.2, percVerb: 0.35,
         stabDry: 0.15, stabDly: 0.14, stabVerb: 0.34,
-        padDry: 0.085, padVerb: 0.22,
+        padDry: 0.16, padVerb: 0.3,
         waves: 0.16, wavesVerb: 0.1,
-        glint: 0.12, glintVerb: 0.48, glintDly: 0.12,
+        glint: 0.045, glintVerb: 0.95, glintDly: 0.15, // 残響の中へ消えていくアクセント。直接の音は小さく、ほとんどを残響へ
         riser: 0, riserVerb: 0,
         verbReturn: 0.55, dlyReturn: 0.45, dlyVerb: 0.35,
       },
       kick: { sweep: 2.2, mid: 1.2, t1: 0.04, t2: 0.14, attack: 0.006, decayAt: 0.04, decay: 0.16, floor: 0.35, lpMin: 110, lpRange: 60, lpQ: 0.7, click: 0, clickHz: 0, clickFrom: 1, len: 1.4 },
       bass: { tri: 0, triDetune: 0, saw: 0, attack: 0.03, sustain: 0.8, release: 0.04, drive: 0.5, lp: 220, lpQ: 0.5 },
-      hat: { hp: [4800, 4000], hpQ: 0.6, lp: [7200, 6500], lpQ: 0.5, pk: [6000, 5500], pkQ: 0.9, pkGain: 1, attack: 0.006, decay: [0.045, 0.12], len: [0.3, 0.8] },
+      // ride: トライアングル（808 の金属の響きを、高い帯域だけ通して長く鳴らす）
+      // ride: 澄んだ鈴（金属の響きではなく、倍音を 3 本だけ重ねる。キーの根音か 5 度の 1 オクターブ上）。ハットとは別に残響へ深く送る
+      hat: { ride: { tone: [[1, 1, 0.6], [2.76, 0.3, 0.3], [5.4, 0.1, 0.12]], octave: 12, level: 0.45, verb: 0.8 }, hp: [4800, 4000], hpQ: 0.6, lp: [7200, 6500], lpQ: 0.5, pk: [6000, 5500], pkQ: 0.9, pkGain: 1, attack: 0.006, decay: [0.045, 0.12], len: [0.3, 0.8] },
       perc: { wave: 'sine', octave: -12, drop: 1.25, dropTime: 0.02, bpMul: 1, bpQ: 0.8, attack: 0.002, decay: 0.035, len: 0.4, noise: 0 },
       stab: { wave: 'triangle', jitter: 2, q: 0.9, cutMin: 420, cutRange: 6, env: [0.4, 0.3], envMax: 3000, envTau: 0.2, attack: 0.08, decayAt: 0.12, tauMin: 0.25, tauRange: 3, hp: 170, tail: 6, spread: 0.01 },
-      pad: { osc: [['sawtooth', -13, 0, 1], ['sawtooth', 13, 0, 1], ['triangle', 0, 12, 0.6]], jitter: 3, attack: 3.2, release: 3.8, lp: 1300, lpQ: 0.3, lfo: [0.018, 420], breath: [0.05, 0.22], spread: 1.6 },
-      glint: { index: 1.1, indexEnd: 0.1, indexTau: 0.5, attack: 0.02, decayAt: 0.025, decay: 0.95, len: 7 },
+      // ストリングスのようなパッド（fog のオルガンの仕組みを流用）: 倍音を 1/n で並べ、セレステを広めにしてコーラスのように揺らす。
+      // 声部は 3 秒おきに入れ替わり、ゆっくり膨らんではしぼむ。ペダルは 1 オクターブ下だけ、弱く
+      pad: {
+        lp: 1400, lpQ: 0.3, lfo: [0.018, 450], breath: [0.05, 0.2],
+        organ: {
+          partials: [[1, 1], [2, 0.5], [3, 0.33], [4, 0.25], [5, 0.2], [6, 0.16], [7, 0.12], [8, 0.1]],
+          pedal: [[-12, 0.35]],
+          celeste: 8, celesteLevel: 0.9, stagger: 3, attack: 4, release: 6, bloom: [20, 50, 0.4], width: 0.8, level: 0.42,
+        },
+      },
+      // アクセント: ほぼ純音の柔らかい 1 音（2 倍の比で浅く変調）が、ゆっくり消える
+      glint: { index: 0.35, indexEnd: 0.05, indexTau: 0.4, attack: 0.012, decayAt: 0.02, decay: 1.6, len: 8, ratio: 2 },
       waves: { lanes: [-0.8, 0, 0.8], hp: 50, lpBase: 220, lpPeak: 1100, lpQ: 0.3, floor: 0.04, foam: 0, foamBand: [0, 0], rumble: 0.5, rumbleLp: 160, crackle: 0 },
       space: { ir: 'cathedral', verbBand: [160, 5200], dlyBand: [300, 2000], dlyLpQ: 0.5, pan: 0.6, wow: [0.11, 0.0012], tape: 0, feedbackStart: 0.42 },
       throw: { feedback: 0.66, send: 1.5 },
@@ -85,20 +98,21 @@
       duck: { attack: 0.03, release: 0.16 },
     },
 
-    // ダブ。矩形波のスタブとリムショットを、テープの歪むディレイへ投げ込む。ベースは太く、かすかなレコードの音
+    // ダブテクノ。共鳴の強いフィルターで濡れたように鳴る和音のスタブを、テープの歪む深いディレイへ。ヒスとレコードの音、
+    // 太いベース（ディレイへほんの少し送る）。泡の音はない
     echo: {
       // echo-mix-0.4: 0.1〜0.3 はディレイの 1 回目の返りが原音より 10 dB 大きく、重なるたびにピークが -1 dB まで積み上がっていた。
       //   原音とほぼ同じ大きさで返るように配分し直した（スタブの鳴り始めもずらしている）。
       //   0.5: ダブ・スローを少し浅くした（0.4 はブレイク明けにピークがリミッタの天井へ張り付いた）
-      version: 'echo-mix-0.5',
+      version: 'echo-mix-0.6', // 0.6 でダブテクノに振り切った（和音 1 つ、根音抜き、1 小節の形、16 小節のフィルターの開閉、きらめきなし）
       mix: {
-        kick: 0.39, bass: 0.19,
+        kick: 0.39, bass: 0.19, bassDly: 0.06, // ベースのかすかなエコー（float で使っていた送りを流用）
         hats: 0.22, hatsVerb: 0.05,
         perc: 0.4, percDly: 0.85, percVerb: 0.15,
-        stabDry: 0.25, stabDly: 0.38, stabVerb: 0.2,
+        stabDry: 0.32, stabDly: 0.38, stabVerb: 0.2, // 和音が主役なので、直接の音を少し前へ（ディレイの返りは積み上がらないよう据え置き）
         padDry: 0.18, padVerb: 0.36,
         waves: 0.28, wavesVerb: 0.04,
-        glint: 0.1, glintVerb: 0.4, glintDly: 0.25,
+        glint: 0, glintVerb: 0, glintDly: 0,
         riser: 0.12, riserVerb: 0.3,
         verbReturn: 0.4, dlyReturn: 0.75, dlyVerb: 0.2,
       },
@@ -106,10 +120,10 @@
       bass: { tri: 0.2, triDetune: 3, saw: 0.35, attack: 0.006, sustain: 0.78, release: 0.02, drive: 1.1, lp: 260, lpQ: 0.7 },
       hat: { hp: [6000, 4800], hpQ: 0.7, lp: [9000, 7500], lpQ: 0.6, pk: [7500, 6800], pkQ: 1.4, pkGain: 3, attack: 0.002, decay: [0.022, 0.09], len: [0.15, 0.6] },
       perc: { wave: 'triangle', octave: -12, drop: 1.4, dropTime: 0.008, bpMul: 1.3, bpQ: 2, attack: 0.001, decay: 0.014, len: 0.2, noise: 0.8, noiseHz: 1900, noiseQ: 2.5, noiseDecay: 0.01 },
-      stab: { wave: 'square', jitter: 1, q: 4.5, cutMin: 180, cutRange: 16, env: [1.5, 1.8], envMax: 3800, envTau: 0.03, attack: 0.006, decayAt: 0.012, tauMin: 0.035, tauRange: 3.5, hp: 150, tail: 7, spread: 0.006 },
+      stab: { wave: 'square', jitter: 1, q: 6, cutMin: 180, cutRange: 16, env: [1.5, 1.8], envMax: 3800, envTau: 0.03, attack: 0.006, decayAt: 0.012, tauMin: 0.035, tauRange: 3.5, hp: 150, tail: 7, spread: 0.006 },
       pad: { osc: [['square', -5, 0, 0.7], ['sawtooth', 6, 0, 1]], jitter: 1.5, attack: 2, release: 2.5, lp: 520, lpQ: 0.6, lfo: [0.04, 180], breath: [0.12, 0.08], spread: 0.8 },
       glint: { index: 2.4, indexEnd: 0.3, indexTau: 0.15, attack: 0.004, decayAt: 0.006, decay: 0.35, len: 3 },
-      waves: { lanes: [-0.5, 0.2, 0.55], hp: 80, lpBase: 400, lpPeak: 1400, lpQ: 0.3, floor: 0.05, foam: 0.12, foamBand: [3000, 7000], rumble: 0.2, rumbleLp: 180, crackle: 0.6 },
+      waves: { lanes: [-0.5, 0.2, 0.55], hp: 80, lpBase: 400, lpPeak: 1400, lpQ: 0.3, floor: 0.1, foam: 0, foamBand: [0, 0], rumble: 0.2, rumbleLp: 180, crackle: 0.6 }, // 泡の音の代わりに、途切れないヒス
       space: { ir: 'plate', verbBand: [220, 7500], dlyBand: [420, 2200], dlyLpQ: 0.6, pan: 0.8, wow: [0.23, 0.0016], tape: 1.3, feedbackStart: 0.62 },
       throw: { feedback: 0.8, send: 1.5 },
       riser: { from: 220, to: 3800, q: 1.4 },
@@ -176,88 +190,35 @@
       duck: { attack: 0.02, release: 0.12 },
     },
 
-    // うねり: 硬めのキック、太く動くベース、乾いた短い和音、残響は控えめ
+    // ミニマル（Robert Hood のような）: 主役は SH-101 風の単音のスタブ（鋭い共鳴、はじくようなフィルター）。
+    // 高いキックと低いキック、刻むハット、タム（音程が落ちるサイン波）。残響はほとんど使わない（Minimal Nation は残響も圧縮もなしで録られた）
     pulse: {
-      version: 'pulse-mix-0.3', // 0.1 は和音 -34 dB で中域が痩せていた。0.2 は和音の鳴り始めが -1.4 dB まで尖った
+      version: 'pulse-mix-0.4', // 0.4 で Robert Hood のミニマルに作り替え（0.1〜0.3 は「いちばんテクノ寄り」の和音の曲調）
       mix: {
-        kick: 0.44, bass: 0.22,
-        hats: 0.26, hatsVerb: 0.04,
-        perc: 0.4, percDly: 0.35, percVerb: 0.08,
-        stabDry: 0.5, stabDly: 0.5, stabVerb: 0.12,
-        padDry: 0.18, padVerb: 0.25,
-        waves: 0.12, wavesVerb: 0.03,
-        glint: 0.2, glintVerb: 0.25, glintDly: 0.2,
-        riser: 0.14, riserVerb: 0.3,
-        verbReturn: 0.3, dlyReturn: 0.5, dlyVerb: 0.15,
+        kick: 0.42, bass: 0.24,
+        hats: 0.36, hatsVerb: 0.02,
+        perc: 0.34, percDly: 0.1, percVerb: 0.05,
+        stabDry: 0.4, stabDly: 0.2, stabVerb: 0.05, // 単音は和音のように音量を分け合わないので、低めに
+        padDry: 0.1, padVerb: 0.1,
+        waves: 0.1, wavesVerb: 0.02,
+        glint: 0, glintVerb: 0, glintDly: 0,
+        riser: 0, riserVerb: 0,
+        verbReturn: 0.15, dlyReturn: 0.3, dlyVerb: 0.08,
       },
-      kick: { sweep: 4, mid: 1.45, t1: 0.022, t2: 0.09, attack: 0.003, decayAt: 0.025, decay: 0.1, floor: 0.3, lpMin: 110, lpRange: 110, lpQ: 1, click: 0.14, clickHz: 3200, clickFrom: 0.3, len: 0.9 },
-      bass: { tri: 0.2, triDetune: 5, saw: 0.25, attack: 0.004, sustain: 0.65, release: 0.012, drive: 1, lp: 380, lpQ: 0.8 },
-      hat: { hp: [7400, 6000], hpQ: 0.8, lp: [11500, 10000], lpQ: 0.6, pk: [10000, 8800], pkQ: 1.3, pkGain: 2.5, attack: 0.0015, decay: [0.015, 0.055], len: [0.12, 0.45] },
-      perc: { wave: 'square', octave: 0, drop: 1.8, dropTime: 0.006, bpMul: 1.2, bpQ: 3, attack: 0.001, decay: 0.012, len: 0.15, noise: 0.4, noiseHz: 2400, noiseQ: 3, noiseDecay: 0.006 },
-      stab: { wave: 'sawtooth', jitter: 1, q: 3, cutMin: 250, cutRange: 18, env: [1.6, 1.6], envMax: 5000, envTau: 0.025, attack: 0.004, decayAt: 0.01, tauMin: 0.03, tauRange: 3, hp: 180, tail: 7, spread: 0.006 },
+      kick: { sweep: 4.2, mid: 1.5, t1: 0.025, t2: 0.11, attack: 0.002, decayAt: 0.03, decay: 0.14, floor: 0.3, lpMin: 110, lpRange: 110, lpQ: 0.8, click: 0.22, clickHz: 3600, clickFrom: 0.3, drive: 1.3, len: 1 },
+      bass: { tri: 0.25, triDetune: 4, saw: 0.3, attack: 0.003, sustain: 0.5, release: 0.01, drive: 1, lp: 420, lpQ: 0.9 },
+      hat: { hp: [7800, 6400], hpQ: 0.8, lp: [12500, 11000], lpQ: 0.6, pk: [10400, 9000], pkQ: 1.4, pkGain: 3, attack: 0.001, decay: [0.012, 0.05], len: [0.1, 0.4] },
+      // タム: 2 オクターブ下のサイン波が、はじいた瞬間から音程を落とす
+      perc: { wave: 'sine', octave: -24, drop: 1.7, dropTime: 0.02, bpMul: 1, bpQ: 0.8, attack: 0.001, decay: 0.07, len: 0.4, noise: 0.15, noiseHz: 1800, noiseQ: 1.5, noiseDecay: 0.004 },
+      // SH-101 風の単音: 共鳴の強いローパスが、弾くたびに鋭く開いてすぐ閉じる
+      stab: { wave: 'sawtooth', jitter: 1, q: 4, cutMin: 200, cutRange: 22, env: [2, 1.5], envMax: 5500, envTau: 0.03, attack: 0.004, decayAt: 0.008, tauMin: 0.05, tauRange: 2.5, hp: 150, tail: 6, spread: 0.004 }, // 2 本の鳴り始めをずらして、同じ位相で重なる尖りを避ける
       pad: { osc: [['sawtooth', -6, 0, 1], ['square', 6, -12, 0.5]], jitter: 1, attack: 1.2, release: 1.6, lp: 650, lpQ: 0.8, lfo: [0.06, 250], breath: [0.12, 0.06], spread: 1 },
       glint: { index: 2, indexEnd: 0.2, indexTau: 0.1, attack: 0.003, decayAt: 0.005, decay: 0.25, len: 2 },
       waves: { lanes: [-0.5, 0.1, 0.5], hp: 120, lpBase: 350, lpPeak: 1600, lpQ: 0.3, floor: 0.02, foam: 0.1, foamBand: [3500, 8000], rumble: 0.1, rumbleLp: 150, crackle: 0 },
-      space: { ir: 'room', verbBand: [250, 7000], dlyBand: [500, 3000], dlyLpQ: 0.6, pan: 0.75, wow: [0.2, 0.0006], tape: 0.8, feedbackStart: 0.4 },
+      space: { ir: 'room', verbBand: [250, 7000], dlyBand: [500, 3000], dlyLpQ: 0.6, pan: 0.75, wow: [0.2, 0.0006], tape: 0.8, feedbackStart: 0.3 },
       throw: { feedback: 0.72, send: 1.6 },
       riser: { from: 300, to: 7000, q: 1.3 },
       duck: { attack: 0.008, release: 0.1 },
-    },
-
-    // ガラス: 細いキックと低音、明るく短いハットとクリック、金属的なきらめき、広く明るい空間
-    glass: {
-      version: 'glass-mix-0.2', // 0.1 はハット -53・和音 -44 dB で高い音が埋もれていた
-      mix: {
-        kick: 0.36, bass: 0.18,
-        hats: 0.5, hatsVerb: 0.1,
-        perc: 0.4, percDly: 0.45, percVerb: 0.3,
-        stabDry: 0.6, stabDly: 0.6, stabVerb: 0.3,
-        padDry: 0.08, padVerb: 0.3,
-        waves: 0.2, wavesVerb: 0.1,
-        glint: 0.12, glintVerb: 0.4, glintDly: 0.3,
-        riser: 0, riserVerb: 0,
-        verbReturn: 0.5, dlyReturn: 0.6, dlyVerb: 0.3,
-      },
-      kick: { sweep: 3.2, mid: 1.4, t1: 0.02, t2: 0.08, attack: 0.003, decayAt: 0.02, decay: 0.08, floor: 0.3, lpMin: 120, lpRange: 100, lpQ: 0.9, click: 0.12, clickHz: 5000, clickFrom: 0.3, len: 0.8 },
-      bass: { tri: 0, triDetune: 0, saw: 0, attack: 0.006, sustain: 0.6, release: 0.015, drive: 0.6, lp: 180, lpQ: 0.6 },
-      hat: { hp: [9000, 7500], hpQ: 0.7, lp: [14000, 12500], lpQ: 0.5, pk: [11500, 10500], pkQ: 1.5, pkGain: 2, attack: 0.001, decay: [0.012, 0.045], len: [0.1, 0.4] },
-      perc: { wave: 'sine', octave: 12, drop: 1.5, dropTime: 0.004, bpMul: 1, bpQ: 4, attack: 0.0008, decay: 0.008, len: 0.1, noise: 0.5, noiseHz: 6000, noiseQ: 3, noiseDecay: 0.004 },
-      stab: { wave: 'triangle', jitter: 1, q: 3, cutMin: 800, cutRange: 8, env: [1.5, 1.5], envMax: 12000, envTau: 0.02, attack: 0.002, decayAt: 0.006, tauMin: 0.03, tauRange: 3, hp: 400, tail: 7, spread: 0.003 },
-      pad: { osc: [['sine', -4, 12, 1], ['sine', 4, 12, 1], ['triangle', 0, 0, 0.4]], jitter: 1, attack: 2.4, release: 3, lp: 3200, lpQ: 0.3, lfo: [0.03, 900], breath: [0.08, 0.12], spread: 1.8 },
-      glint: { index: 3, indexEnd: 0.4, indexTau: 0.06, attack: 0.001, decayAt: 0.002, decay: 0.2, len: 1.6 },
-      waves: { lanes: [-0.9, 0, 0.9], hp: 1500, lpBase: 3000, lpPeak: 6000, lpQ: 0.3, floor: 0.02, foam: 0.25, foamBand: [6000, 12000], rumble: 0, rumbleLp: 100, crackle: 0 },
-      space: { ir: 'plate', verbBand: [300, 11000], dlyBand: [700, 5000], dlyLpQ: 0.4, pan: 0.9, wow: [0.1, 0.0004], tape: 0, feedbackStart: 0.52 },
-      throw: { feedback: 0.76, send: 1.6 },
-      riser: { from: 400, to: 8000, q: 1 },
-      duck: { attack: 0.01, release: 0.07 },
-    },
-
-    // 深海: 低いドローンのパッド、重く柔らかいキック、とても長い残響
-    deep: {
-      version: 'deep-mix-0.2', // 0.1 はパッド -19.5・和音 -23 dB で前に出すぎていた
-      mix: {
-        kick: 0.3, bass: 0.28,
-        hats: 0.3, hatsVerb: 0.2,
-        perc: 0.2, percDly: 0.2, percVerb: 0.4,
-        stabDry: 0.1, stabDly: 0.08, stabVerb: 0.25,
-        padDry: 0.075, padVerb: 0.16,
-        waves: 0.13, wavesVerb: 0.1,
-        glint: 0.1, glintVerb: 0.6, glintDly: 0.1,
-        riser: 0, riserVerb: 0,
-        verbReturn: 0.5, dlyReturn: 0.4, dlyVerb: 0.4,
-      },
-      kick: { sweep: 2, mid: 1.15, t1: 0.05, t2: 0.16, attack: 0.008, decayAt: 0.05, decay: 0.2, floor: 0.4, lpMin: 100, lpRange: 40, lpQ: 0.6, click: 0, clickHz: 0, clickFrom: 1, len: 1.6 },
-      bass: { tri: 0, triDetune: 0, saw: 0, attack: 0.05, sustain: 0.85, release: 0.06, drive: 0.4, lp: 180, lpQ: 0.5 },
-      hat: { hp: [4000, 3500], hpQ: 0.6, lp: [6000, 5500], lpQ: 0.5, pk: [5000, 4500], pkQ: 0.8, pkGain: 1, attack: 0.008, decay: [0.06, 0.15], len: [0.35, 0.9] },
-      perc: { wave: 'sine', octave: -24, drop: 1.4, dropTime: 0.03, bpMul: 1, bpQ: 0.7, attack: 0.003, decay: 0.06, len: 0.6, noise: 0 },
-      stab: { wave: 'triangle', jitter: 3, q: 1.2, cutMin: 200, cutRange: 5, env: [0.5, 0.4], envMax: 1500, envTau: 0.3, attack: 0.15, decayAt: 0.2, tauMin: 0.35, tauRange: 3, hp: 120, tail: 6, spread: 0.02 },
-      pad: { osc: [['sawtooth', -10, 0, 1], ['sawtooth', 10, -12, 0.8], ['sine', 0, -12, 0.7]], jitter: 3, attack: 4, release: 4.5, lp: 480, lpQ: 0.5, lfo: [0.012, 300], breath: [0.04, 0.2], spread: 1.4 },
-      glint: { index: 0.9, indexEnd: 0.08, indexTau: 0.6, attack: 0.03, decayAt: 0.035, decay: 1.2, len: 8 },
-      waves: { lanes: [-0.8, 0, 0.8], hp: 40, lpBase: 150, lpPeak: 600, lpQ: 0.3, floor: 0.06, foam: 0, foamBand: [0, 0], rumble: 0.6, rumbleLp: 120, crackle: 0 },
-      space: { ir: 'abyss', verbBand: [120, 4000], dlyBand: [250, 1600], dlyLpQ: 0.5, pan: 0.6, wow: [0.08, 0.0014], tape: 0, feedbackStart: 0.44 },
-      throw: { feedback: 0.66, send: 1.4 },
-      riser: { from: 150, to: 1500, q: 1 },
-      duck: { attack: 0.04, release: 0.2 },
     },
 
     // 静けさ: シンギングボウルの長い余韻、柔らかな持続音、遠い心拍のようなキック、深く長い残響
@@ -323,34 +284,6 @@
       duck: { attack: 0.012, release: 0.09 },
     },
 
-    // 残り火: 丸くくすんだアナログ風の和音、軽く飽和したベース、柔らかく低いキック、高域は少なめ
-    ember: {
-      version: 'ember-mix-0.1',
-      mix: {
-        kick: 0.36, bass: 0.24,
-        hats: 0.2, hatsVerb: 0.06,
-        perc: 0.16, percDly: 0.3, percVerb: 0.2,
-        stabDry: 0.26, stabDly: 0.3, stabVerb: 0.26,
-        padDry: 0.11, padVerb: 0.25,
-        waves: 0.1, wavesVerb: 0.05,
-        glint: 0.1, glintVerb: 0.4, glintDly: 0.15,
-        riser: 0, riserVerb: 0,
-        verbReturn: 0.45, dlyReturn: 0.6, dlyVerb: 0.25,
-      },
-      kick: { sweep: 2.6, mid: 1.25, t1: 0.035, t2: 0.12, attack: 0.005, decayAt: 0.035, decay: 0.13, floor: 0.32, lpMin: 110, lpRange: 45, lpQ: 0.7, click: 0, clickHz: 0, clickFrom: 1, len: 1.2 },
-      bass: { tri: 0.3, triDetune: 5, saw: 0.15, attack: 0.008, sustain: 0.75, release: 0.02, drive: 1.1, lp: 280, lpQ: 0.6 },
-      hat: { hp: [5600, 4600], hpQ: 0.6, lp: [8200, 7200], lpQ: 0.5, pk: [7000, 6200], pkQ: 1, pkGain: 1, attack: 0.003, decay: [0.022, 0.08], len: [0.15, 0.55] },
-      perc: { wave: 'triangle', octave: -12, drop: 1.3, dropTime: 0.012, bpMul: 1, bpQ: 1.2, attack: 0.002, decay: 0.028, len: 0.3, noise: 0 },
-      stab: { wave: 'sawtooth', jitter: 3, q: 1.8, cutMin: 260, cutRange: 7, env: [0.9, 0.9], envMax: 2600, envTau: 0.06, attack: 0.008, decayAt: 0.016, tauMin: 0.08, tauRange: 3.5, hp: 150, tail: 7, spread: 0.006 },
-      pad: { osc: [['sawtooth', -11, 0, 1], ['sawtooth', 11, 0, 1], ['triangle', 0, -12, 0.4]], jitter: 3, attack: 2.2, release: 2.8, lp: 700, lpQ: 0.5, lfo: [0.024, 260], breath: [0.06, 0.12], spread: 1.3 },
-      glint: { index: 0.8, indexEnd: 0.08, indexTau: 0.3, attack: 0.012, decayAt: 0.016, decay: 0.7, len: 5 },
-      waves: { lanes: [-0.7, 0, 0.7], hp: 60, lpBase: 240, lpPeak: 1200, lpQ: 0.3, floor: 0.04, foam: 0, foamBand: [0, 0], rumble: 0.3, rumbleLp: 150, crackle: 0 },
-      space: { ir: 'room', verbBand: [180, 5000], dlyBand: [320, 2000], dlyLpQ: 0.5, pan: 0.6, wow: [0.12, 0.0008], tape: 1, feedbackStart: 0.5 },
-      throw: { feedback: 0.72, send: 1.5 },
-      riser: { from: 200, to: 2000, q: 1 },
-      duck: { attack: 0.015, release: 0.1 },
-    },
-
     // 霧: 拍を持たないオルガンのドローン。倍音の豊かなパイプの音、純正律のうなり、一声ずつ時間差で重なる声部、大聖堂の残響
     fog: {
       version: 'fog-mix-0.4',
@@ -397,6 +330,7 @@
     motor: {
       version: 'motor-mix-0.3', // 0.2 でドラムを 909 風に。0.3 でリズム隊を前へ、上物を暗く（陰のデトロイト）
       mix: {
+        trim: 0.8, // 全体を約 2 dB 下げて tide と同じあたりに（聴感の重み付けで -10.0 dB と、いちばん大きかった）
         kick: 0.44, bass: 0.35, // 曲を回すベースなので前に出す（そのぶんキックを少し下げ、全体の大きさは前と同じあたり）
         hats: 0.6, hatsVerb: 0.1,
         perc: 0.24, percDly: 0.1, percVerb: 0.1, // 手拍子は乾かす
@@ -434,7 +368,7 @@
 
     // マイクロハウス: プチプチしたクリック（高く短い音と、ほんの一瞬のノイズ）、短く弾むベース、小さく乾いた和音、軽いキック
     click: {
-      version: 'click-mix-0.2',
+      version: 'click-mix-0.3', // 0.3 でクリックを決まった形のループに、アクセント、和音の置き場所のずれ（どれも既存の仕組みの設定）
       mix: {
         kick: 0.41, bass: 0.27,
         hats: 0.3, hatsVerb: 0.05,
@@ -569,37 +503,6 @@
       duck: { attack: 0.012, release: 0.08 },
     },
 
-    // 漂うアシッド: 聞こえないキック、ゆっくり鳴く 303 をディレイと残響へも送る、厚く暗いパッド
-    float: {
-      version: 'float-mix-0.3',
-      mix: {
-        kick: 0, bass: 0.18, bassDly: 0.5, bassVerb: 0.45, // ベースは奥へ（直接の音を下げ、エコーと残響に溶かす）
-        hats: 0.14, hatsVerb: 0.06,
-        perc: 0.14, percDly: 0.4, percVerb: 0.2,
-        stabDry: 0.2, stabDly: 0.45, stabVerb: 0.38,
-        padDry: 0.25, padVerb: 0.56, // ベースが引いたぶん、周りの空気を少し足す
-        waves: 0.16, wavesVerb: 0.09,
-        glint: 0.08, glintVerb: 0.45, glintDly: 0.2,
-        riser: 0, riserVerb: 0,
-        verbReturn: 0.5, dlyReturn: 0.65, dlyVerb: 0.3,
-      },
-      kick: { ghost: true }, // 音は出さない。拍ごとの呼吸だけ
-      bass: {
-        tri: 0, triDetune: 0, saw: 0, attack: 0.004, sustain: 1, release: 0.04, drive: 1, lp: 5000, lpQ: 0.5,
-        acid: { wave: 'sawtooth', q: 8, accentQ: 2, cutMin: 150, cutRange: 7, env: 1.5, envAccent: 2.2, envMax: 3600, decay: 0.18, decayAccent: 0.11, attack: 0.006, release: 0.05, accentAt: 0.85, accentGain: 1.1, glide: 0.12 }, // 柔らかく鳴く
-      },
-      hat: { hp: [6600, 5400], hpQ: 0.6, lp: [9000, 8000], lpQ: 0.5, pk: [8000, 7000], pkQ: 1, pkGain: 1, attack: 0.003, decay: [0.02, 0.05], len: [0.12, 0.35] },
-      perc: { wave: 'triangle', octave: -12, drop: 1.4, dropTime: 0.01, bpMul: 1, bpQ: 1.4, attack: 0.002, decay: 0.03, len: 0.3, noise: 0.2, noiseHz: 1800, noiseQ: 2, noiseDecay: 0.01 },
-      stab: { wave: 'sawtooth', jitter: 3, q: 1.5, cutMin: 280, cutRange: 6, env: [0.9, 0.9], envMax: 2200, envTau: 0.08, attack: 0.012, decayAt: 0.02, tauMin: 0.1, tauRange: 3, hp: 170, tail: 8, spread: 0.008 },
-      pad: { osc: [['sawtooth', -9, 0, 1], ['sawtooth', 9, 0, 1], ['sine', 0, 12, 0.2]], jitter: 3, attack: 2.8, release: 3.2, lp: 800, lpQ: 0.4, lfo: [0.02, 240], breath: [0.06, 0.12], spread: 1.5 },
-      glint: { index: 0.9, indexEnd: 0.06, indexTau: 0.35, attack: 0.015, decayAt: 0.02, decay: 0.9, len: 5, ratio: 2 },
-      waves: { lanes: [-0.6, 0.05, 0.65], hp: 90, lpBase: 220, lpPeak: 560, lpQ: 0.3, floor: 0.1, foam: 0, foamBand: [0, 0], rumble: 0.2, rumbleLp: 150, crackle: 0 },
-      space: { ir: 'hall', verbBand: [170, 5200], dlyBand: [320, 2200], dlyLpQ: 0.5, pan: 0.7, wow: [0.12, 0.0008], tape: 0.7, feedbackStart: 0.56 },
-      throw: { feedback: 0.8, send: 1.8 },
-      riser: { from: 200, to: 2000, q: 1 },
-      duck: { attack: 0.025, release: 0.15 },
-    },
-
     // ダブ・ギター: ミュートした短い刻み（高い 4 本だけ、すぐ止める）をエコーへ深く送る。太いベース、リムショット
     skank: {
       version: 'skank-mix-0.2',
@@ -669,6 +572,43 @@
       throw: { feedback: 0.7, send: 1.4 },
       riser: { from: 220, to: 3000, q: 1 },
       duck: { attack: 0.02, release: 0.12 },
+    },
+
+    // エレクトロニカ（dust）: 主役はループ（stab.grain で作る和音の断片を切り出して鳴らす）。レコードのプチプチのような
+    // ハットとパーカッション、柔らかく丸いキック、深いベース。上ものは乾かし気味で、ディレイだけ少し
+    dust: {
+      version: 'dust-mix-0.1',
+      mix: {
+        kick: 0.26, bass: 0.2, // キックとベースは控えめに、ループを主役に
+        hats: 0.3, hatsVerb: 0.05,
+        perc: 0.3, percDly: 0.25, percVerb: 0.1,
+        stabDry: 0.5, stabDly: 0.22, stabVerb: 0.12,
+        padDry: 0.1, padVerb: 0.2,
+        waves: 0.2, wavesVerb: 0.02,
+        glint: 0, glintVerb: 0, glintDly: 0,
+        riser: 0, riserVerb: 0,
+        verbReturn: 0.3, dlyReturn: 0.45, dlyVerb: 0.12,
+      },
+      kick: { sweep: 2.6, mid: 1.25, t1: 0.03, t2: 0.12, attack: 0.004, decayAt: 0.03, decay: 0.16, floor: 0.35, lpMin: 90, lpRange: 30, lpQ: 0.6, click: 0, clickHz: 2000, clickFrom: 1, len: 1 },
+      bass: { tri: 0.5, triDetune: 1, saw: 0, attack: 0.01, sustain: 0.85, release: 0.05, drive: 0.5, lp: 260, lpQ: 0.4 },
+      // レコードのプチプチ（Jelinek は盤のノイズをハットやリムにした）: ごく短く、帯域の広いノイズの一瞬
+      hat: { hp: [2600, 2400], hpQ: 0.5, lp: [9000, 8000], lpQ: 0.4, pk: [4800, 4200], pkQ: 0.8, pkGain: 3, attack: 0.0005, decay: [0.0025, 0.006], len: [0.03, 0.06] },
+      perc: { wave: 'sine', octave: 12, drop: 1.1, dropTime: 0.002, bpMul: 1, bpQ: 0.7, attack: 0.0005, decay: 0.004, len: 0.05, noise: 0.8, noiseHz: 3200, noiseQ: 0.8, noiseDecay: 0.003 },
+      // grain: ループの元になる和音の断片。seconds 秒のエレピの和音（FM 1:1、index は [弾いた瞬間, 落ち着いた後]）、
+      // strum 秒ずつずらして弾く、tine は [倍率, 量, 減衰] の金属的な芯、brush はブラシのノイズ、wow は [速さ, 深さ] の揺れ、
+      // lp は古いレコードの丸さ、edge は切り口を丸める秒数
+      stab: {
+        wave: 'triangle', jitter: 1, q: 0.8, cutMin: 400, cutRange: 6, env: [1, 1], envMax: 3000, envTau: 0.05, attack: 0.01, decayAt: 0.02, tauMin: 0.1, tauRange: 2, hp: 120, tail: 6, spread: 0.01,
+        grain: { seconds: 1.6, strum: 0.014, decay: 1.2, index: [1.8, 0.3], indexTau: 0.16, tine: [4.1, 0.12, 0.05], brush: 0.025, wow: [0.6, 0.0025], lp: 3200, edge: 0.0025, level: 0.9 },
+      },
+      pad: { osc: [['triangle', -5, 0, 1], ['sine', 5, -12, 0.6]], jitter: 2, attack: 3, release: 4, lp: 700, lpQ: 0.4, lfo: [0.02, 150], breath: [0.05, 0.12], spread: 1.2 },
+      glint: { index: 1.2, indexEnd: 0.1, indexTau: 0.2, attack: 0.004, decayAt: 0.006, decay: 0.6, len: 3, ratio: 1 },
+      // 盤のノイズ（crackle）が主で、波の寄せ返しはごく薄く
+      waves: { lanes: [-0.4, 0.2, 0.55], hp: 200, lpBase: 500, lpPeak: 1400, lpQ: 0.3, floor: 0.02, foam: 0, foamBand: [0, 0], rumble: 0.05, rumbleLp: 140, crackle: 0.5 },
+      space: { ir: 'room', verbBand: [220, 6000], dlyBand: [400, 2600], dlyLpQ: 0.5, pan: 0.6, wow: [0.3, 0.0012], tape: 0.5, feedbackStart: 0.42 },
+      throw: { feedback: 0.7, send: 1.4 },
+      riser: { from: 250, to: 3000, q: 1 },
+      duck: { attack: 0.01, release: 0.12 },
     },
   };
 
